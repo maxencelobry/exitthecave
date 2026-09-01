@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ApecScrapper } from "./scrappers/apec/scrapper.js";
 import { CadremploiScrapper } from "./scrappers/cadremploi/scrapper.js";
+import { writeJson } from "./exporters/json.js";
 import { FranceTravailScrapper } from "./scrappers/francetravail/scrapper.js";
 import { GlassdoorScrapper } from "./scrappers/glassdoor/scrapper.js";
 import { HelloworkScrapper } from "./scrappers/hellowork/scrapper.js";
@@ -28,7 +29,7 @@ import { writeCsv } from "./exporters/csv.js";
 	);
 
 	await mkdir(dataPath, { recursive: true });
-	await writeFile(outputPath, JSON.stringify({ generatedAt: new Date().toISOString(), stats, results }, null, 2));
+	await writeFile(outputPath, writeJson({ generatedAt: new Date().toISOString(), stats, results }));
 	await writeFile(csvOutputPath, writeCsv(csvOffers), "utf8");
 
 	for (const [site, siteStats] of Object.entries(stats)) console.log(`[Stats] ${site} : ${siteStats.offers} offre(s)`);

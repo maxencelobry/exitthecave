@@ -19,6 +19,7 @@ logs/
 # Scraper output and local browser state
 data/*
 !data/jobs.output.json
+!data/jobs.output.csv
 output/
 exports/
 screenshots/
