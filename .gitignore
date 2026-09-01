@@ -17,7 +17,7 @@ logs/
 *.seed
 
 # Scraper output and local browser state
-data/
+data/*
 !data/jobs.output.json
 output/
 exports/
