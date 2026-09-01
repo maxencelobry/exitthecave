@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { ApecScrapper } from "./scrappers/apec/scrapper.js";
 import { CadremploiScrapper } from "./scrappers/cadremploi/scrapper.js";
 import { FranceTravailScrapper } from "./scrappers/francetravail/scrapper.js";
 import { GlassdoorScrapper } from "./scrappers/glassdoor/scrapper.js";
@@ -7,14 +8,15 @@ import { HelloworkScrapper } from "./scrappers/hellowork/scrapper.js";
 import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
 
 (async() => {
-	const [franceTravail, meteojob, hellowork, glassdoor, cadremploi] = await Promise.all([
-		new FranceTravailScrapper().scrap(),
-		new MeteojobScrapper().scrap(),
-		new HelloworkScrapper().scrap(),
-		new GlassdoorScrapper().scrap(),
-		new CadremploiScrapper().scrap(),
-	]);
-	const results = { franceTravail, meteojob, hellowork, glassdoor, cadremploi };
+    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec] = await Promise.all([
+      new FranceTravailScrapper().scrap(),
+      new MeteojobScrapper().scrap(),
+      new HelloworkScrapper().scrap(),
+      new GlassdoorScrapper().scrap(),
+      new CadremploiScrapper().scrap(),
+      new ApecScrapper().scrap(),
+    ]);
+    const results = { franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec };
 	const stats = Object.fromEntries(Object.entries(results).map(([site, offers]) => [site, { offers: offers.length }]));
 	const outputPath = join(process.cwd(), "data", "jobs.json");
 
