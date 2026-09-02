@@ -23,4 +23,7 @@ export const searchConfig = {
     cadremploi: {
         locationSlug: "trappes-78",
     },
+    jobijoba: {
+        radiusKm: 15,
+    },
 } as const;

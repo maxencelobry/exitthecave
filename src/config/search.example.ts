@@ -46,4 +46,9 @@ export const searchConfigExample = {
         // Slug used in the URL: city + department.
         locationSlug: "trappes-78",
     },
+
+    jobijoba: {
+        // Jobijoba uses a dedicated perimeter in kilometers.
+        radiusKm: 15,
+    },
 } as const;

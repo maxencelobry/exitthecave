@@ -1,27 +1,35 @@
 {
-  "generatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
-  "stats": {
-    "franceTravail": {
-      "offers": 0
+    "generatedAt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+    "stats": {
+        "franceTravail": {
+            "offers": 0
+        },
+        "meteojob": {
+            "offers": 0
+        },
+        "hellowork": {
+            "offers": 0
+        },
+        "glassdoor": {
+            "offers": 0
+        },
+        "cadremploi": {
+            "offers": 0
+        },
+        "apec": {
+            "offers": 0
+        },
+        "jobijoba": {
+            "offers": 0
+        }
     },
-    "meteojob": {
-      "offers": 0
-    },
-    "hellowork": {
-      "offers": 0
-    },
-    "glassdoor": {
-      "offers": 0
-    },
-    "cadremploi": {
-      "offers": 0
+    "results": {
+        "franceTravail": [],
+        "meteojob": [],
+        "hellowork": [],
+        "glassdoor": [],
+        "cadremploi": [],
+        "apec": [],
+        "jobijoba": []
     }
-  },
-  "results": {
-    "franceTravail": [],
-    "meteojob": [],
-    "hellowork": [],
-    "glassdoor": [],
-    "cadremploi": []
-  }
 }

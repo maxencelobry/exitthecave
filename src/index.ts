@@ -9,15 +9,17 @@ import { HelloworkScrapper } from "./scrappers/hellowork/scrapper.js";
 import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
 import { writeCsv } from "./exporters/csv.js";
 import { enrichOffers, filterOffers } from "./filters/offers.js";
+import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
 
 (async () => {
-    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec] = await Promise.all([
+    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] = await Promise.all([
         new FranceTravailScrapper().scrap(),
         new MeteojobScrapper().scrap(),
         new HelloworkScrapper().scrap(),
         new GlassdoorScrapper().scrap(),
         new CadremploiScrapper().scrap(),
         new ApecScrapper().scrap(),
+        new JobijobaScrapper().scrap(),
     ]);
 
     const results = {
@@ -27,6 +29,7 @@ import { enrichOffers, filterOffers } from "./filters/offers.js";
         glassdoor: filterOffers(enrichOffers(glassdoor)),
         cadremploi: filterOffers(enrichOffers(cadremploi)),
         apec: filterOffers(enrichOffers(apec)),
+        jobijoba: filterOffers(enrichOffers(jobijoba)),
     };
     const stats = Object.fromEntries(
         Object.entries(results).map(([site, offers]) => [site, { offers: offers.length }]),
