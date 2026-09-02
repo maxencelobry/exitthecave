@@ -1,6 +1,7 @@
 import { chromium, type Page } from "playwright";
+import { searchConfig } from "../../config/search.js";
 
-const SEARCH_URL = "https://candidat.francetravail.fr/offres/emploi/trappes/v236";
+const SEARCH_URL = `https://candidat.francetravail.fr/offres/recherche?lieux=${searchConfig.franceTravail.locationCode}&distance=${searchConfig.location.radiusKm}`;
 const OFFER_SELECTOR = 'a.media.with-fav[href*="/offres/recherche/detail/"]';
 
 export interface FranceTravailResult {

@@ -1,6 +1,7 @@
 import { connect } from "puppeteer-real-browser";
+import { searchConfig } from "../../config/search.js";
 
-const SEARCH_URL = "https://www.cadremploi.fr/emploi/liste_offres?ville=trappes-78&rayon=10";
+const SEARCH_URL = `https://www.cadremploi.fr/emploi/liste_offres?ville=${searchConfig.cadremploi.locationSlug}&rayon=${searchConfig.location.radiusKm}`;
 const OFFER_SELECTOR = 'h2 a[href*="detail_offre?offreId="]';
 
 export interface CadremploiResult {

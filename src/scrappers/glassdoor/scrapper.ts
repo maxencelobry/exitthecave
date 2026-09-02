@@ -1,6 +1,7 @@
 import { connect } from "puppeteer-real-browser";
+import { searchConfig } from "../../config/search.js";
 
-const SEARCH_URL = "https://www.glassdoor.fr/Emploi/trappes-emplois-SRCH_IL.0,7_IC2941075.htm?fromAge=1&sortBy=date_desc&radius=6";
+const SEARCH_URL = `https://www.glassdoor.fr/Emploi/${searchConfig.glassdoor.locationPath}?fromAge=1&sortBy=date_desc&radius=${searchConfig.glassdoor.radiusMiles}`;
 const OFFER_SELECTOR = 'a[href*="/job-listing/"]';
 
 export interface GlassdoorResult {
@@ -21,6 +22,7 @@ export class GlassdoorScrapper {
       this.log(`Ouverture de ${SEARCH_URL}`);
       await page.goto(SEARCH_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
       await new Promise((resolve) => setTimeout(resolve, 3_000));
+      await this.dismissLoginModal(page);
 
       const heading = await page.$eval("h1", (element) => element.textContent ?? "").catch(() => "");
       this.log(`Résultat affiché : ${heading.replace(/\s+/g, " ").trim()}`);
@@ -42,6 +44,7 @@ export class GlassdoorScrapper {
 
   private async collectPages(page: Awaited<ReturnType<typeof connect>>["page"], results: Map<string, GlassdoorResult>): Promise<void> {
     for (let pageNumber = 1; pageNumber <= 100; pageNumber += 1) {
+      await this.dismissLoginModal(page);
       const entries = await page.$$eval(OFFER_SELECTOR, (links) => links.map((link) => {
         const card = link.closest("li") ?? link.parentElement;
         return {
@@ -72,8 +75,30 @@ export class GlassdoorScrapper {
 
       for (let attempt = 0; attempt < 30; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.dismissLoginModal(page);
         if (await page.$$eval(OFFER_SELECTOR, (links) => links.length) > before) break;
       }
+    }
+  }
+
+  private async dismissLoginModal(page: Awaited<ReturnType<typeof connect>>["page"]): Promise<void> {
+    const closed = await page.evaluate(() => {
+      const modal = [...document.querySelectorAll('[role="dialog"], dialog, [class*="modal"]')]
+        .find((element) => /Ne manquez plus aucune opportunité|Créez une alerte emploi|accès unique/i.test(element.textContent ?? ""));
+      if (!modal) return false;
+
+      const closeButton = [...modal.querySelectorAll("button, [role=button]")]
+        .find((element) => /close|fermer|×|✕|✖/i.test(
+          `${element.getAttribute("aria-label") ?? ""} ${element.getAttribute("title") ?? ""} ${element.textContent ?? ""}`,
+        ));
+      if (!closeButton) return false;
+      (closeButton as HTMLElement).click();
+      return true;
+    });
+
+    if (closed) {
+      this.log("Modale de connexion/alerte fermée");
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
   }
 
