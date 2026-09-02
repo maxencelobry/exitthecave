@@ -8,6 +8,7 @@ import { GlassdoorScrapper } from "./scrappers/glassdoor/scrapper.js";
 import { HelloworkScrapper } from "./scrappers/hellowork/scrapper.js";
 import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
 import { writeCsv } from "./exporters/csv.js";
+import { enrichOffers, filterOffers } from "./filters/offers.js";
 
 (async () => {
     const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec] = await Promise.all([
@@ -19,7 +20,14 @@ import { writeCsv } from "./exporters/csv.js";
         new ApecScrapper().scrap(),
     ]);
 
-    const results = { franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec };
+    const results = {
+        franceTravail: filterOffers(enrichOffers(franceTravail)),
+        meteojob: filterOffers(enrichOffers(meteojob)),
+        hellowork: filterOffers(enrichOffers(hellowork)),
+        glassdoor: filterOffers(enrichOffers(glassdoor)),
+        cadremploi: filterOffers(enrichOffers(cadremploi)),
+        apec: filterOffers(enrichOffers(apec)),
+    };
     const stats = Object.fromEntries(
         Object.entries(results).map(([site, offers]) => [site, { offers: offers.length }]),
     );
@@ -27,7 +35,12 @@ import { writeCsv } from "./exporters/csv.js";
     const outputPath = join(dataPath, "jobs.json");
     const csvOutputPath = join(dataPath, "jobs.csv");
     const csvOffers = Object.entries(results).flatMap(([site, offers]) =>
-        offers.map((offer) => ({ site, title: offer.title, url: offer.url, extra: offer.extra })),
+        offers.map((offer) => ({
+            site,
+            title: offer.title,
+            url: offer.url,
+            extra: offer.extra,
+        })),
     );
 
     await mkdir(dataPath, { recursive: true });

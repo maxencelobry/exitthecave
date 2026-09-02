@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Recherche d'offres</title>
+        <style>
+            :root {
+                color-scheme: light;
+                font-family: system-ui, sans-serif;
+                background: #eef3f8;
+                color: #17202a;
+            }
+
+            body {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 40px 20px 56px;
+            }
+
+            h1 {
+                margin: 0;
+                font-size: clamp(2rem, 4vw, 3.2rem);
+                letter-spacing: -0.04em;
+            }
+
+            .intro {
+                margin-bottom: 24px;
+            }
+
+            .intro p {
+                color: #52606d;
+                margin: 8px 0 0;
+            }
+
+            .controls {
+                display: grid;
+                grid-template-columns: minmax(220px, 1fr) 180px 180px 180px;
+                gap: 12px;
+                margin-bottom: 18px;
+                padding: 16px;
+                border: 1px solid #d9e2ec;
+                border-radius: 14px;
+                background: rgba(255, 255, 255, 0.86);
+                box-shadow: 0 12px 30px rgba(30, 55, 80, 0.08);
+            }
+
+            input,
+            select,
+            button {
+                box-sizing: border-box;
+                min-height: 42px;
+                border: 1px solid #c8d0d8;
+                border-radius: 8px;
+                background: white;
+                padding: 8px 12px;
+                font: inherit;
+            }
+
+            input:focus,
+            select:focus,
+            button:focus-visible {
+                outline: 3px solid rgba(8, 103, 199, 0.2);
+                border-color: #0867c7;
+            }
+
+            button {
+                cursor: pointer;
+                border-color: #0867c7;
+                background: #0867c7;
+                color: white;
+                font-weight: 700;
+            }
+
+            button.secondary {
+                border-color: #c8d0d8;
+                background: white;
+                color: #17202a;
+            }
+
+            .status {
+                margin: 12px 0;
+                color: #52606d;
+                font-size: 0.95rem;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+                background: white;
+                border-radius: 10px;
+                border: 1px solid #d9e2ec;
+                box-shadow: 0 12px 30px rgba(30, 55, 80, 0.08);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                min-width: 900px;
+            }
+
+            th,
+            td {
+                padding: 11px 12px;
+                border-bottom: 1px solid #e7ebef;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            th {
+                position: sticky;
+                top: 0;
+                background: #e9eef3;
+                white-space: nowrap;
+            }
+
+            tbody tr:hover {
+                background: #f6faff;
+            }
+
+            td:last-child {
+                min-width: 320px;
+                color: #52606d;
+            }
+
+            a {
+                color: #0867c7;
+            }
+
+            .empty {
+                padding: 32px;
+                text-align: center;
+                color: #52606d;
+            }
+
+            @media (max-width: 800px) {
+                .controls {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header class="intro">
+            <h1>Recherche d'offres</h1>
+            <p>Charge <code>data/jobs.csv</code> pour retrouver rapidement les offres à candidater.</p>
+        </header>
+
+        <div class="controls">
+            <input id="file" type="file" accept=".csv,text/csv" />
+            <input id="search" type="search" placeholder="Rechercher une offre..." />
+            <select id="site">
+                <option value="">Tous les sites</option>
+            </select>
+            <select id="contract">
+                <option value="">Tous les contrats</option>
+            </select>
+            <select id="sort">
+                <option value="newest">Plus récentes en premier</option>
+                <option value="oldest">Plus anciennes en premier</option>
+            </select>
+            <button id="load">Charger le CSV</button>
+            <button id="clear" class="secondary" type="button">Réinitialiser</button>
+        </div>
+
+        <div id="status" class="status">Aucun fichier chargé.</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Site</th>
+                        <th>Intitulé</th>
+                        <th>Entreprise</th>
+                        <th>Localisation</th>
+                        <th>Contrat</th>
+                        <th>Salaire</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="results">
+                    <tr>
+                        <td class="empty" colspan="8">Charge un fichier CSV pour commencer.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+            let offers = [];
+
+            const elements = {
+                file: document.querySelector("#file"),
+                search: document.querySelector("#search"),
+                site: document.querySelector("#site"),
+                contract: document.querySelector("#contract"),
+                sort: document.querySelector("#sort"),
+                load: document.querySelector("#load"),
+                clear: document.querySelector("#clear"),
+                status: document.querySelector("#status"),
+                results: document.querySelector("#results"),
+            };
+
+            function parseCsv(text) {
+                const rows = [];
+                let row = [];
+                let cell = "";
+                let quoted = false;
+                const input = text.replace(/^\uFEFF/, "");
+
+                for (let index = 0; index < input.length; index += 1) {
+                    const character = input[index];
+                    const next = input[index + 1];
+                    if (character === '"' && quoted && next === '"') {
+                        cell += '"';
+                        index += 1;
+                        continue;
+                    }
+                    if (character === '"') {
+                        quoted = !quoted;
+                        continue;
+                    }
+                    if (character === ";" && !quoted) {
+                        row.push(cell);
+                        cell = "";
+                        continue;
+                    }
+                    if ((character === "\n" || character === "\r") && !quoted) {
+                        if (character === "\r" && next === "\n") index += 1;
+                        row.push(cell);
+                        cell = "";
+                        if (row.some((value) => value !== "")) rows.push(row);
+                        row = [];
+                        continue;
+                    }
+                    cell += character;
+                }
+                if (cell || row.length) {
+                    row.push(cell);
+                    rows.push(row);
+                }
+
+                const headers = rows.shift() || [];
+                return rows.map((values) =>
+                    Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])),
+                );
+            }
+
+            function dateValue(value) {
+                const text = String(value || "").toLowerCase();
+                const now = Date.now();
+                if (/aujourd'hui|aujourd’hui/.test(text)) return now;
+                if (/hier/.test(text)) return now - 86400000;
+                const relative = text.match(/(?:il y a|il y a environ)\s+(\d+)\s*(minute|heure|jour|semaine)/);
+                if (relative) {
+                    const units = {
+                        minute: 60000,
+                        heure: 3600000,
+                        jour: 86400000,
+                        semaine: 604800000,
+                    };
+                    return now - Number(relative[1]) * units[relative[2]];
+                }
+                const parsed = Date.parse(value);
+                return Number.isNaN(parsed) ? 0 : parsed;
+            }
+
+            function addOptions(select, values) {
+                select.querySelectorAll("option:not(:first-child)").forEach((option) => option.remove());
+                [...values].sort().forEach((value) => {
+                    const option = document.createElement("option");
+                    option.value = value;
+                    option.textContent = value;
+                    select.append(option);
+                });
+            }
+
+            function render() {
+                const query = elements.search.value.trim().toLowerCase();
+                const filtered = offers
+                    .filter((offer) => {
+                        const haystack = Object.values(offer).join(" ").toLowerCase();
+                        return (
+                            (!query || haystack.includes(query)) &&
+                            (!elements.site.value || offer.site === elements.site.value) &&
+                            (!elements.contract.value || offer.contrat === elements.contract.value)
+                        );
+                    })
+                    .sort((first, second) => {
+                        const difference = dateValue(second.date_publication) - dateValue(first.date_publication);
+                        return elements.sort.value === "newest" ? difference : -difference;
+                    });
+
+                elements.status.textContent = `${filtered.length} offre(s) affichée(s) sur ${offers.length}.`;
+                elements.results.replaceChildren();
+                if (!filtered.length) {
+                    const row = document.createElement("tr");
+                    row.innerHTML = '<td class="empty" colspan="8">Aucune offre ne correspond à la recherche.</td>';
+                    elements.results.append(row);
+                    return;
+                }
+
+                filtered.forEach((offer) => {
+                    const row = document.createElement("tr");
+                    const link = document.createElement("a");
+                    link.href = offer.lien;
+                    link.target = "_blank";
+                    link.rel = "noreferrer";
+                    link.textContent = offer.intitulé || "Sans intitulé";
+                    const values = [
+                        offer.site,
+                        link,
+                        offer.entreprise,
+                        offer.localisation,
+                        offer.contrat,
+                        offer.salaire,
+                        offer.date_publication,
+                        offer.description,
+                    ];
+                    values.forEach((value) => {
+                        const cell = document.createElement("td");
+                        cell.append(value instanceof Node ? value : document.createTextNode(value || ""));
+                        row.append(cell);
+                    });
+                    elements.results.append(row);
+                });
+            }
+
+            function loadText(text) {
+                offers = parseCsv(text);
+                addOptions(elements.site, new Set(offers.map((offer) => offer.site).filter(Boolean)));
+                addOptions(elements.contract, new Set(offers.map((offer) => offer.contrat).filter(Boolean)));
+                render();
+            }
+
+            function resetFilters() {
+                elements.search.value = "";
+                elements.site.value = "";
+                elements.contract.value = "";
+                elements.sort.value = "newest";
+                render();
+            }
+
+            elements.file.addEventListener("change", async () => {
+                const file = elements.file.files[0];
+                if (file) loadText(await file.text());
+            });
+            elements.load.addEventListener("click", async () => {
+                try {
+                    loadText(await (await fetch("data/jobs.csv")).text());
+                } catch {
+                    elements.status.textContent =
+                        "Impossible de charger data/jobs.csv : sélectionne le fichier manuellement.";
+                }
+            });
+            elements.clear.addEventListener("click", resetFilters);
+            elements.search.addEventListener("input", render);
+            [elements.site, elements.contract, elements.sort].forEach((element) =>
+                element.addEventListener("change", render),
+            );
+            elements.load.click();
+        </script>
+    </body>
+</html>

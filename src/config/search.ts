@@ -6,6 +6,10 @@ export const searchConfig = {
         inseeCode: "78621",
         radiusKm: 10,
     },
+    filters: {
+        excludedBroadLocations: ["Île-de-France"],
+        excludedContracts: ["Alternance", "Stage"],
+    },
     franceTravail: {
         locationCode: "78621",
     },

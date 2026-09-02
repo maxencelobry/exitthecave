@@ -24,11 +24,15 @@ export class FranceTravailScrapper {
         try {
             const page = await browser.newPage();
             this.log(`Ouverture de ${SEARCH_URL}`);
-            await page.goto(SEARCH_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
+            await page.goto(SEARCH_URL, {
+                waitUntil: "domcontentloaded",
+                timeout: 30_000,
+            });
             await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
             await page.waitForTimeout(500);
 
             await this.applyLastDayFilter(page);
+            await this.sortByDate(page);
             await this.collectPages(page, results);
 
             this.log(`${results.size} offre(s) trouvée(s)`);
@@ -158,6 +162,31 @@ export class FranceTravailScrapper {
                 .catch(() => undefined);
             await page.waitForTimeout(800);
             pageNumber += 1;
+        }
+    }
+
+    private async sortByDate(page: Page): Promise<void> {
+        this.log("Tri par date : double clic demandé par France Travail");
+
+        for (let attempt = 1; attempt <= 2; attempt += 1) {
+            const sortButton = page.locator("#sort1");
+            if ((await sortButton.count()) === 0) {
+                this.logError("Bouton de tri introuvable", "#sort1");
+                return;
+            }
+
+            await sortButton.click({ force: true });
+            const dateOption = page.getByText("Date", { exact: true }).last();
+            if ((await dateOption.count()) === 0) {
+                this.logError("Option de tri par date introuvable", "Date");
+                return;
+            }
+
+            await dateOption.click({ force: true });
+            await page.waitForLoadState("domcontentloaded", { timeout: 15_000 }).catch(() => undefined);
+            await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+            await page.waitForTimeout(800);
+            this.log(`Tri par date appliqué (${attempt}/2)`);
         }
     }
 

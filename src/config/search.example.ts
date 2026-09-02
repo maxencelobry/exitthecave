@@ -16,6 +16,13 @@ export const searchConfigExample = {
         radiusKm: 10,
     },
 
+    filters: {
+        // Exclude offers that only provide a broad region instead of a city.
+        excludedBroadLocations: ["Île-de-France"],
+        // Change this list to include or allow other contract types.
+        excludedContracts: ["Alternance", "Stage"],
+    },
+
     franceTravail: {
         // Location identifier used by France Travail:
         // /offres/emploi/trappes/v236 -> locationCode = "78621"

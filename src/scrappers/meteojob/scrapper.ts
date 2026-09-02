@@ -11,6 +11,7 @@ export interface MeteojobResult {
         company: string | null;
         location: string | null;
         contract: string | null;
+        salary: string | null;
         publishedAt: string | null;
         visibleInfo: string[];
     };
@@ -24,7 +25,10 @@ export class MeteojobScrapper {
         try {
             const page = await browser.newPage();
             this.log(`Ouverture de ${SEARCH_URL}`);
-            await page.goto(SEARCH_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
+            await page.goto(SEARCH_URL, {
+                waitUntil: "domcontentloaded",
+                timeout: 30_000,
+            });
             await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
             await page.waitForTimeout(1_000);
             await page.addStyleTag({
@@ -65,25 +69,26 @@ export class MeteojobScrapper {
                 articles.map((article) => {
                     const link = article.querySelector('a[href*="/jobs/"]') as HTMLAnchorElement | null;
                     const title = article.querySelector("h2")?.textContent?.replace(/\s+/g, " ").trim() ?? "";
-                    const paragraphs = [...article.querySelectorAll("p")]
-                        .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
-                        .filter(Boolean);
-                    const visibleInfo = (article.textContent ?? "")
-                        .split(/\n+/)
-                        .map((value) => value.replace(/\s+/g, " ").trim())
-                        .filter((value) => value && value !== title);
-                    const publishedAt = visibleInfo.find((value) => /hier|il y a \d+ heure/i.test(value)) ?? null;
-                    const location = visibleInfo.find((value) => /\(\d{2}\)|france/i.test(value)) ?? null;
-                    const contract =
-                        visibleInfo.find((value) => /CDI|CDD|Intérim|Alternance|Indépendant/i.test(value)) ?? null;
+                    const text = (selector: string): string => {
+                        const element = article.querySelector(selector);
+                        element?.querySelectorAll("mat-icon").forEach((icon) => icon.remove());
+                        return element?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+                    };
+                    const company = text('[id$="-company-name"]');
+                    const location = text('[id$="-job-locations"]');
+                    const contract = text('[id$="-contract-types"]');
+                    const salary = text('[id$="-salary"]');
+                    const publishedAt = text(".cc-font-size-small");
+                    const visibleInfo = [location, contract, salary, publishedAt].filter(Boolean);
 
                     return {
                         title,
                         href: link?.href ?? "",
-                        company: paragraphs[0] ?? null,
-                        location,
-                        contract,
-                        publishedAt,
+                        company: company || null,
+                        location: location || null,
+                        contract: contract || null,
+                        salary: salary || null,
+                        publishedAt: publishedAt || null,
                         visibleInfo,
                     };
                 }),
@@ -99,6 +104,7 @@ export class MeteojobScrapper {
                         company: entry.company,
                         location: entry.location,
                         contract: entry.contract,
+                        salary: entry.salary,
                         publishedAt: entry.publishedAt,
                         visibleInfo: entry.visibleInfo,
                     },
@@ -107,11 +113,17 @@ export class MeteojobScrapper {
             }
             this.log(`Page ${pageNumber} : ${newResults} nouvelle(s) offre(s), ${results.size} au total`);
 
-            const next = page.getByRole("button", { name: "Page suivante", exact: true });
+            const next = page.getByRole("button", {
+                name: "Page suivante",
+                exact: true,
+            });
             if ((await next.count()) === 0 || !(await next.isEnabled()) || newResults === 0) return;
             const nextUrl = new URL(page.url());
             nextUrl.searchParams.set("page", String(pageNumber + 1));
-            await page.goto(nextUrl.toString(), { waitUntil: "commit", timeout: 15_000 });
+            await page.goto(nextUrl.toString(), {
+                waitUntil: "commit",
+                timeout: 15_000,
+            });
             for (let attempt = 0; attempt < 30; attempt += 1) {
                 if ((await page.locator(OFFER_SELECTOR).count()) > 0) break;
                 await page.waitForTimeout(500);

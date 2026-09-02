@@ -8,7 +8,7 @@ type CsvOffer = {
 function asText(value: unknown): string {
     if (typeof value === "string") return value;
     if (Array.isArray(value)) return value.filter((item) => typeof item === "string").join(" | ");
-	return value == null ? "" : String(value);
+    return value == null ? "" : String(value);
 }
 
 function csvCell(value: unknown): string {
@@ -24,8 +24,10 @@ export function writeCsv(offers: CsvOffer[]): string {
         "entreprise",
         "localisation",
         "contrat",
+        "salaire",
         "temps_de_travail",
         "date_publication",
+        "description",
         "extra",
     ];
     const rows = offers.map(({ site, title, url, extra }) => {
@@ -50,8 +52,10 @@ export function writeCsv(offers: CsvOffer[]): string {
             fields.company,
             location,
             contract,
+            fields.salary,
             fields.workTime,
             publishedAt,
+            fields.description,
             JSON.stringify(extra),
         ]
             .map(csvCell)
