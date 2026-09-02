@@ -1,4 +1,15 @@
 export const searchConfig = {
+    scrapers: {
+        enabled: {
+            franceTravail: true,
+            meteojob: true,
+            hellowork: true,
+            glassdoor: true,
+            cadremploi: true,
+            apec: true,
+            jobijoba: false,
+        },
+    },
     location: {
         city: "Trappes",
         postalCode: "78190",

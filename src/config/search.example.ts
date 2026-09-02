@@ -5,6 +5,19 @@
  * The last-24-hours filter is automatic and must not be configured here.
  */
 export const searchConfigExample = {
+    scrapers: {
+        enabled: {
+            // Set a scraper to false to skip it completely.
+            franceTravail: true,
+            meteojob: true,
+            hellowork: true,
+            glassdoor: true,
+            cadremploi: true,
+            apec: true,
+            jobijoba: false,
+        },
+    },
+
     location: {
         // Name used by HelloWork and Meteojob.
         city: "Trappes",

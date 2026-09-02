@@ -10,16 +10,18 @@ import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
 import { writeCsv } from "./exporters/csv.js";
 import { enrichOffers, filterOffers } from "./filters/offers.js";
 import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
+import { searchConfig } from "./config/search.js";
 
 (async () => {
+    const enabled = searchConfig.scrapers.enabled;
     const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] = await Promise.all([
-        new FranceTravailScrapper().scrap(),
-        new MeteojobScrapper().scrap(),
-        new HelloworkScrapper().scrap(),
-        new GlassdoorScrapper().scrap(),
-        new CadremploiScrapper().scrap(),
-        new ApecScrapper().scrap(),
-        new JobijobaScrapper().scrap(),
+        enabled.franceTravail ? new FranceTravailScrapper().scrap() : Promise.resolve([]),
+        enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
+        enabled.hellowork ? new HelloworkScrapper().scrap() : Promise.resolve([]),
+        enabled.glassdoor ? new GlassdoorScrapper().scrap() : Promise.resolve([]),
+        enabled.cadremploi ? new CadremploiScrapper().scrap() : Promise.resolve([]),
+        enabled.apec ? new ApecScrapper().scrap() : Promise.resolve([]),
+        enabled.jobijoba ? new JobijobaScrapper().scrap() : Promise.resolve([]),
     ]);
 
     const results = {
