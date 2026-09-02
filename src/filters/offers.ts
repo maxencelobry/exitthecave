@@ -60,35 +60,30 @@ export function enrichOffers<T extends Offer>(offers: T[]): T[] {
         const visibleInfo = asArray(fields.visibleInfo);
         const text = visibleInfo.join(" | ");
         const afterTitle = text.slice(Math.max(text.indexOf(offer.title) + offer.title.length, 0)).trim();
-        const contract =
-            asString(fields.contract) ||
-            afterTitle.match(/\b(CDI|CDD|Intérim|Alternance|Stage|Freelance|Indépendant)\b/i)?.[1] ||
-            null;
-        const salary =
-            asString(fields.salary) ||
-            afterTitle
-                .match(
-                    /\d[\d\s.,]*\s*(?:k\s*)?€\s*(?:-|à)\s*\d[\d\s.,]*\s*(?:k\s*)?€(?:\s*(?:par|\/)??\s*(?:an|mois|heure))?/i,
-                )?.[0]
-                ?.trim() ||
-            null;
+        const contractMatch = afterTitle.match(/\b(CDI|CDD|Intérim|Alternance|Stage|Freelance|Indépendant)\b/i);
+        const contract = asString(fields.contract) || contractMatch?.[1] || null;
+        const salaryMatch = afterTitle.match(
+            /\d[\d\s.,]*\s*(?:k\s*)?€\s*(?:-|à)\s*\d[\d\s.,]*\s*(?:k\s*)?€(?:\s*(?:par|\/)?\s*(?:an|mois|heure))?/i,
+        );
+        const salary = asString(fields.salary) || salaryMatch?.[0]?.trim() || null;
         const publishedAt =
             asString(fields.publishedAt) ||
             afterTitle.match(
                 /\b\d{2}\/\d{2}\/\d{4}\b|(?:moins d'une heure|il y a \d+ (?:minute|heure|jour)s?|hier|aujourd'hui)/i,
             )?.[0] ||
             null;
-        const afterContract = contract
-            ? afterTitle.slice(afterTitle.search(new RegExp(`\\b${contract}\\b`, "i")) + contract.length)
+        const afterContract = contractMatch
+            ? afterTitle.slice((contractMatch.index ?? 0) + contractMatch[0].length)
             : afterTitle;
         const location =
             asString(fields.location) ||
             afterContract.match(/[A-ZÀ-ÖØ-Ý][\p{L}'-]+(?:[ -][\p{L}'-]+)*\s*(?:\(\d{2}\)|-\s*\d{2})/u)?.[0] ||
             null;
+        const beforeSalary = salaryMatch ? afterTitle.slice(0, salaryMatch.index ?? 0) : "";
+        const afterSalary = salaryMatch ? afterTitle.slice((salaryMatch.index ?? 0) + salaryMatch[0].length) : "";
         const description =
             asString(fields.description) ||
-            afterTitle
-                .replace(salary || "", "")
+            (beforeSalary.length > afterSalary.length ? beforeSalary : afterSalary)
                 .replace(contract || "", "")
                 .replace(location || "", "")
                 .replace(publishedAt || "", "")
@@ -99,6 +94,7 @@ export function enrichOffers<T extends Offer>(offers: T[]): T[] {
             ...offer,
             extra: {
                 ...fields,
+                rawText: text || null,
                 contract,
                 salary,
                 location,

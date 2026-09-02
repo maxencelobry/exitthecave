@@ -45,6 +45,20 @@
                 box-shadow: 0 12px 30px rgba(30, 55, 80, 0.08);
             }
 
+            .check-control {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-height: 42px;
+                color: #52606d;
+                font-size: 0.95rem;
+            }
+
+            .check-control input {
+                min-height: auto;
+                accent-color: #0867c7;
+            }
+
             input,
             select,
             button {
@@ -158,6 +172,7 @@
                 <option value="newest">Plus récentes en premier</option>
                 <option value="oldest">Plus anciennes en premier</option>
             </select>
+            <label class="check-control"><input id="unapplied" type="checkbox" /> À postuler uniquement</label>
             <button id="load">Charger le CSV</button>
             <button id="clear" class="secondary" type="button">Réinitialiser</button>
         </div>
@@ -175,11 +190,12 @@
                         <th>Salaire</th>
                         <th>Date</th>
                         <th>Description</th>
+                        <th>Suivi</th>
                     </tr>
                 </thead>
                 <tbody id="results">
                     <tr>
-                        <td class="empty" colspan="8">Charge un fichier CSV pour commencer.</td>
+                        <td class="empty" colspan="9">Charge un fichier CSV pour commencer.</td>
                     </tr>
                 </tbody>
             </table>
@@ -187,6 +203,7 @@
 
         <script>
             let offers = [];
+            const applied = new Set(JSON.parse(localStorage.getItem("jobs-applied") || "[]"));
 
             const elements = {
                 file: document.querySelector("#file"),
@@ -196,6 +213,7 @@
                 sort: document.querySelector("#sort"),
                 load: document.querySelector("#load"),
                 clear: document.querySelector("#clear"),
+                unapplied: document.querySelector("#unapplied"),
                 status: document.querySelector("#status"),
                 results: document.querySelector("#results"),
             };
@@ -282,7 +300,8 @@
                         return (
                             (!query || haystack.includes(query)) &&
                             (!elements.site.value || offer.site === elements.site.value) &&
-                            (!elements.contract.value || offer.contrat === elements.contract.value)
+                            (!elements.contract.value || offer.contrat === elements.contract.value) &&
+                            (!elements.unapplied.checked || !applied.has(offer.lien))
                         );
                     })
                     .sort((first, second) => {
@@ -294,7 +313,7 @@
                 elements.results.replaceChildren();
                 if (!filtered.length) {
                     const row = document.createElement("tr");
-                    row.innerHTML = '<td class="empty" colspan="8">Aucune offre ne correspond à la recherche.</td>';
+                    row.innerHTML = '<td class="empty" colspan="9">Aucune offre ne correspond à la recherche.</td>';
                     elements.results.append(row);
                     return;
                 }
@@ -306,6 +325,16 @@
                     link.target = "_blank";
                     link.rel = "noreferrer";
                     link.textContent = offer.intitulé || "Sans intitulé";
+                    const tracking = document.createElement("input");
+                    tracking.type = "checkbox";
+                    tracking.checked = applied.has(offer.lien);
+                    tracking.title = "Marquer cette offre comme déjà traitée";
+                    tracking.addEventListener("change", () => {
+                        if (tracking.checked) applied.add(offer.lien);
+                        else applied.delete(offer.lien);
+                        localStorage.setItem("jobs-applied", JSON.stringify([...applied]));
+                        if (elements.unapplied.checked) render();
+                    });
                     const values = [
                         offer.site,
                         link,
@@ -315,6 +344,7 @@
                         offer.salaire,
                         offer.date_publication,
                         offer.description,
+                        tracking,
                     ];
                     values.forEach((value) => {
                         const cell = document.createElement("td");
@@ -337,6 +367,7 @@
                 elements.site.value = "";
                 elements.contract.value = "";
                 elements.sort.value = "newest";
+                elements.unapplied.checked = false;
                 render();
             }
 
@@ -354,7 +385,7 @@
             });
             elements.clear.addEventListener("click", resetFilters);
             elements.search.addEventListener("input", render);
-            [elements.site, elements.contract, elements.sort].forEach((element) =>
+            [elements.site, elements.contract, elements.sort, elements.unapplied].forEach((element) =>
                 element.addEventListener("change", render),
             );
             elements.load.click();
