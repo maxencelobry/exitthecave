@@ -1,3 +1,3 @@
 export function writeJson(data: unknown): string {
-  return JSON.stringify(data, null, 2);
+    return JSON.stringify(data, null, 2);
 }
