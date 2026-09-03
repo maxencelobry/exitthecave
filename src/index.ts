@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { ApecScrapper } from "./scrappers/apec/scrapper.js";
 import { CadremploiScrapper } from "./scrappers/cadremploi/scrapper.js";
 import { writeJson } from "./exporters/json.js";
@@ -12,33 +13,14 @@ import { enrichOffers, filterOffers } from "./filters/offers.js";
 import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
 import { searchConfig } from "./config/search.js";
 import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./storage/offer-history.js";
-import { FranceTravailApiScrapper } from "./scrappers/francetravail-api/scrapper.js";
+import type { RawOffer } from "./jobs/model.js";
+import type { FranceTravailApiOptions } from "./scrappers/francetravail/api.js";
 
-type Offer = { title: string; url: string; extra: unknown };
-
-function mergeOffers(primary: Offer[], supplemental: Offer[]): Offer[] {
-    const merged = new Map(primary.map((offer) => [offer.url, offer]));
-    for (const offer of supplemental) {
-        const existing = merged.get(offer.url);
-        if (!existing) {
-            merged.set(offer.url, offer);
-            continue;
-        }
-        const existingExtra = existing.extra && typeof existing.extra === "object" ? existing.extra : {};
-        const supplementalExtra = offer.extra && typeof offer.extra === "object" ? offer.extra : {};
-        merged.set(offer.url, { ...existing, ...offer, extra: { ...existingExtra, ...supplementalExtra } });
-    }
-    return [...merged.values()];
-}
-
-(async () => {
+export async function collectOffers(options: FranceTravailApiOptions = {}): Promise<RawOffer[]> {
     const enabled = searchConfig.scrapers.enabled;
-    const [franceTravailBrowser, franceTravailApi, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] =
+    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] =
         await Promise.all([
-            enabled.franceTravail ? new FranceTravailScrapper().scrap() : Promise.resolve([]),
-            enabled.franceTravail && searchConfig.franceTravail.api.enabled
-                ? new FranceTravailApiScrapper().scrap()
-                : Promise.resolve([]),
+            enabled.franceTravail ? new FranceTravailScrapper().scrap(options) : Promise.resolve([]),
             enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
             enabled.hellowork ? new HelloworkScrapper().scrap() : Promise.resolve([]),
             enabled.glassdoor ? new GlassdoorScrapper().scrap() : Promise.resolve([]),
@@ -48,7 +30,7 @@ function mergeOffers(primary: Offer[], supplemental: Offer[]): Offer[] {
         ]);
 
     const results = {
-        franceTravail: filterOffers(enrichOffers(mergeOffers(franceTravailBrowser, franceTravailApi))),
+        franceTravail: filterOffers(enrichOffers(franceTravail)),
         meteojob: filterOffers(enrichOffers(meteojob)),
         hellowork: filterOffers(enrichOffers(hellowork)),
         glassdoor: filterOffers(enrichOffers(glassdoor)),
@@ -56,6 +38,9 @@ function mergeOffers(primary: Offer[], supplemental: Offer[]): Offer[] {
         apec: filterOffers(enrichOffers(apec)),
         jobijoba: filterOffers(enrichOffers(jobijoba)),
     };
+    const allOffers = Object.entries(results).flatMap(([site, offers]) =>
+        offers.map((offer) => ({ site, title: offer.title, url: offer.url, extra: offer.extra })),
+    );
     const dataPath = join(process.cwd(), "data");
     const outputPath = join(dataPath, "jobs.json");
     const csvOutputPath = join(dataPath, "jobs.csv");
@@ -102,4 +87,11 @@ function mergeOffers(primary: Offer[], supplemental: Offer[]): Offer[] {
     console.log(`[Stats] CSV sauvegardé : ${csvOutputPath} (${csvOffers.length} ligne(s))`);
 
     console.log(JSON.stringify(freshResults, null, 2));
-})();
+    return allOffers;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+    collectOffers().catch((error) => {
+        console.error(`[Collecte] Erreur fatale : ${String(error)}`);
+        process.exitCode = 1;
+    });

@@ -4,6 +4,11 @@ import { searchConfig } from "../../config/search.js";
 const TOKEN_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire";
 const API_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search";
 const PAGE_SIZE = 150;
+export type FranceTravailApiOptions = {
+    locationCode?: string | undefined;
+    radiusKm?: number | undefined;
+    limit?: number | undefined;
+};
 
 function isoWithoutMilliseconds(date: Date): string {
     return date.toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -46,7 +51,7 @@ export interface FranceTravailApiResult {
 }
 
 export class FranceTravailApiScrapper {
-    async scrap(): Promise<FranceTravailApiResult[]> {
+    async scrap(options: FranceTravailApiOptions = {}): Promise<FranceTravailApiResult[]> {
         try {
             process.loadEnvFile?.();
             const credentials = await this.loadCredentials();
@@ -62,15 +67,18 @@ export class FranceTravailApiScrapper {
             const results: FranceTravailApiResult[] = [];
             const minCreationDate = isoWithoutMilliseconds(new Date(Date.now() - 24 * 60 * 60 * 1000));
             const maxCreationDate = isoWithoutMilliseconds(new Date());
+            const locationCode = options.locationCode ?? searchConfig.franceTravail.locationCode;
+            const radiusKm = options.radiusKm ?? searchConfig.franceTravail.radiusKm;
+            const limit = Math.min(Math.max(options.limit ?? 10_000, 1), 10_000);
             let total = 0;
 
-            for (let start = 0; start <= 10_000; start += PAGE_SIZE) {
+            for (let start = 0; start < limit; start += PAGE_SIZE) {
                 const params = new URLSearchParams({
-                    commune: searchConfig.franceTravail.locationCode,
-                    distance: String(searchConfig.franceTravail.radiusKm),
+                    commune: locationCode,
+                    distance: String(radiusKm),
                     minCreationDate,
                     maxCreationDate,
-                    range: `${start}-${start + PAGE_SIZE - 1}`,
+                    range: `${start}-${Math.min(start + PAGE_SIZE - 1, limit - 1)}`,
                     sort: "1",
                 });
                 const response = await fetch(`${API_URL}?${params}`, {
@@ -78,7 +86,7 @@ export class FranceTravailApiScrapper {
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status} ${await response.text()}`);
                 const payload = (await response.json()) as { resultats?: ApiOffer[] };
-                const batch = payload.resultats ?? [];
+                const batch = (payload.resultats ?? []).slice(0, limit - results.length);
                 if (start === 0) {
                     total = Number(response.headers.get("content-range")?.match(/\/(\d+)$/)?.[1] ?? 0);
                     this.log(`Résultat API affiché : ${total || "inconnu"} offre(s)`);

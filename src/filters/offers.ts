@@ -66,10 +66,18 @@ function cleanContract(values: string[]): string | null {
 }
 
 function cleanDate(values: string[]): string | null {
-    return firstMatch(
-        values,
-        /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|(?:moins d'une heure|il y a \d+\s*(?:minute|heure|jour)s?|hier|aujourd'hui)/i,
-    );
+    for (const value of values) {
+        const candidate = value.replace(/\s+/g, " ").trim().replace(/^publi(?:é|ée|e)\s+/i, "");
+        if (
+            /^(?:\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?)?|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})$/i.test(
+                candidate,
+            )
+        )
+            return candidate;
+        if (/^(?:moins d'une heure|il y a \d+\s*(?:minute|heure|jour)s?|hier|aujourd'hui|aujourd’hui)$/i.test(candidate))
+            return candidate;
+    }
+    return null;
 }
 
 function cleanSalary(values: string[]): string | null {

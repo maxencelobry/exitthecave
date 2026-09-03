@@ -232,6 +232,11 @@
             table[data-hidden~="salary"] .column-salary,
             table[data-hidden~="date"] .column-date,
             table[data-hidden~="description"] .column-description,
+            table[data-hidden~="remote"] .column-remote,
+            table[data-hidden~="experience"] .column-experience,
+            table[data-hidden~="skills"] .column-skills,
+            table[data-hidden~="freshness"] .column-freshness,
+            table[data-hidden~="reliability"] .column-reliability,
             table[data-hidden~="tracking"] .column-tracking {
                 display: none;
             }
@@ -260,7 +265,7 @@
 
             table {
                 width: 100%;
-                min-width: 1180px;
+                min-width: 1500px;
                 border-collapse: separate;
                 border-spacing: 0;
                 table-layout: fixed;
@@ -520,6 +525,13 @@
                 <label class="file-label" for="file">Importer un CSV</label>
                 <input class="file-input" id="file" type="file" accept=".csv,text/csv" />
                 <button id="load" class="secondary" type="button">Recharger jobs.csv</button>
+                <input
+                    id="api-url"
+                    type="url"
+                    placeholder="URL API CSV : http://127.0.0.1:3000/jobs.csv"
+                    aria-label="URL de l'API CSV"
+                />
+                <button id="load-api" class="secondary" type="button">Charger l’API</button>
                 <button id="clear" class="secondary" type="button">Réinitialiser</button>
                 <details class="columns-menu">
                     <summary>Colonnes affichées</summary>
@@ -532,6 +544,11 @@
                         <label><input type="checkbox" data-column="salary" checked /> Salaire</label>
                         <label><input type="checkbox" data-column="date" checked /> Date</label>
                         <label><input type="checkbox" data-column="description" checked /> Description</label>
+                        <label><input type="checkbox" data-column="remote" checked /> Télétravail</label>
+                        <label><input type="checkbox" data-column="experience" checked /> Expérience</label>
+                        <label><input type="checkbox" data-column="skills" checked /> Compétences</label>
+                        <label><input type="checkbox" data-column="freshness" checked /> Fraîcheur</label>
+                        <label><input type="checkbox" data-column="reliability" checked /> Fiabilité</label>
                         <label><input type="checkbox" data-column="tracking" checked /> Suivi</label>
                     </div>
                 </details>
@@ -555,12 +572,17 @@
                         <th class="column-salary">Salaire</th>
                         <th class="column-date">Date</th>
                         <th class="column-description">Description</th>
+                        <th class="column-remote">Télétravail</th>
+                        <th class="column-experience">Expérience</th>
+                        <th class="column-skills">Compétences</th>
+                        <th class="column-freshness">Fraîcheur</th>
+                        <th class="column-reliability">Fiabilité</th>
                         <th class="column-tracking">Suivi</th>
                             </tr>
                         </thead>
                         <tbody id="results">
                             <tr>
-                                <td class="empty" colspan="9">Charge un fichier CSV pour commencer.</td>
+                                <td class="empty" colspan="14">Charge un fichier CSV pour commencer.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -651,6 +673,8 @@
                 fitFilter: document.querySelector("#fit-filter"),
                 sort: document.querySelector("#sort"),
                 load: document.querySelector("#load"),
+                apiUrl: document.querySelector("#api-url"),
+                loadApi: document.querySelector("#load-api"),
                 clear: document.querySelector("#clear"),
                 status: document.querySelector("#status"),
                 visibleCount: document.querySelector("#visible-count"),
@@ -663,6 +687,7 @@
             };
 
             const STORAGE_COLUMNS = "jobs-visible-columns";
+            const STORAGE_API_URL = "jobs-api-url";
 
             function readSet(key) {
                 try {
@@ -706,6 +731,48 @@
                     .filter(Boolean);
             }
 
+            function cleanContractValue(value) {
+                const normalized = String(value || "")
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLocaleLowerCase("fr");
+                const contracts = [
+                    ["cdi", "CDI"],
+                    ["cdd", "CDD"],
+                    ["interim", "Intérim"],
+                    ["alternance", "Alternance"],
+                    ["apprentissage", "Apprentissage"],
+                    ["stage", "Stage"],
+                    ["freelance", "Freelance"],
+                    ["independant", "Indépendant"],
+                ];
+                return contracts.find(([key]) => new RegExp(`\\b${key}\\b`).test(normalized))?.[1] || "";
+            }
+
+            function cleanDateValue(value) {
+                const candidate = String(value || "")
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .replace(/^publi(?:é|ée|e)\s+/i, "");
+                if (/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?)$/i.test(candidate))
+                    return candidate;
+                if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(candidate)) return candidate;
+                if (/^(?:moins d'une heure|il y a \d+\s*(?:minute|heure|jour)s?|hier|aujourd'hui|aujourd’hui)$/i.test(candidate))
+                    return candidate;
+                return "";
+            }
+
+            function displayDate(value) {
+                const clean = cleanDateValue(value);
+                const timestamp = Date.parse(clean);
+                if (!Number.isNaN(timestamp))
+                    return new Intl.DateTimeFormat("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                    }).format(new Date(timestamp));
+                return clean;
+            }
+
             function parseCsv(text) {
                 const rows = [];
                 let row = [];
@@ -742,6 +809,8 @@
                 const headers = rows.shift() || [];
                 return rows.map((values) => {
                     const offer = Object.fromEntries(headers.map((header, index) => [header, values[index] || ""]));
+                    offer.contrat = cleanContractValue(offer.contrat);
+                    offer.date_publication = cleanDateValue(offer.date_publication);
                     offer._key = offer.lien || `${offer.site}|${offer.intitulé}|${offer.localisation}`;
                     offer._search = Object.values(offer).join(" ").toLocaleLowerCase("fr");
                     offer._fit = fitScore(offer);
@@ -849,14 +918,14 @@
                     if (start > 0) {
                         const spacer = document.createElement("tr");
                         spacer.className = "spacer";
-                        spacer.innerHTML = `<td colspan="9" style="height:${start * ROW_HEIGHT}px;padding:0;border:0"></td>`;
+                        spacer.innerHTML = `<td colspan="14" style="height:${start * ROW_HEIGHT}px;padding:0;border:0"></td>`;
                         fragment.append(spacer);
                     }
                     filtered.slice(start, end).forEach((offer) => fragment.append(createRow(offer)));
                     if (end < filtered.length) {
                         const spacer = document.createElement("tr");
                         spacer.className = "spacer";
-                        spacer.innerHTML = `<td colspan="9" style="height:${(filtered.length - end) * ROW_HEIGHT}px;padding:0;border:0"></td>`;
+                        spacer.innerHTML = `<td colspan="14" style="height:${(filtered.length - end) * ROW_HEIGHT}px;padding:0;border:0"></td>`;
                         fragment.append(spacer);
                     }
                     elements.results.replaceChildren(fragment);
@@ -916,10 +985,15 @@
                     titleCell,
                     offer.entreprise,
                     offer.localisation,
-                    offer.contrat,
+                    cleanContractValue(offer.contrat),
                     offer.salaire,
-                    offer.date_publication,
+                    displayDate(offer.date_publication),
                     offer.description,
+                    offer.teletravail,
+                    offer.experience,
+                    offer.competences,
+                    offer.fraicheur,
+                    offer.score_fiabilite ? `${offer.score_fiabilite}%` : "",
                     followCell,
                 ].forEach((value, index) => {
                     const cell = document.createElement("td");
@@ -932,6 +1006,11 @@
                         "salary",
                         "date",
                         "description",
+                        "remote",
+                        "experience",
+                        "skills",
+                        "freshness",
+                        "reliability",
                         "tracking",
                     ];
                     cell.className = `column-${columnNames[index]}`;
@@ -963,6 +1042,23 @@
                 elements.excludedCompanies.value = localStorage.getItem(STORAGE_EXCLUDED_COMPANIES) || "";
             }
 
+            function loadApiUrl() {
+                elements.apiUrl.value = localStorage.getItem(STORAGE_API_URL) || "http://127.0.0.1:3000/jobs.csv";
+            }
+
+            async function loadFromApi() {
+                const url = elements.apiUrl.value.trim();
+                if (!url) return;
+                localStorage.setItem(STORAGE_API_URL, url);
+                try {
+                    const response = await fetch(url, { cache: "no-store" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    loadText(await response.text());
+                } catch (error) {
+                    elements.status.textContent = `Impossible de charger l’API : ${String(error)}`;
+                }
+            }
+
             elements.file.addEventListener("change", async () => {
                 const file = elements.file.files[0];
                 if (file) loadText(await file.text());
@@ -975,6 +1071,7 @@
                         "Impossible de charger data/jobs.csv : importe le fichier manuellement.";
                 }
             });
+            elements.loadApi.addEventListener("click", loadFromApi);
             elements.clear.addEventListener("click", resetFilters);
             elements.excludedCompanies.addEventListener("input", () => {
                 localStorage.setItem(STORAGE_EXCLUDED_COMPANIES, elements.excludedCompanies.value);
@@ -992,6 +1089,7 @@
             elements.scroll.addEventListener("scroll", renderWindow, { passive: true });
             loadColumnVisibility();
             loadExcludedCompanies();
+            loadApiUrl();
             elements.load.click();
         </script>
     </body>

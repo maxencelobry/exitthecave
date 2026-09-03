@@ -16,6 +16,30 @@ function csvCell(value: unknown): string {
     return /[;"\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+function cleanContract(value: string): string {
+    const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const contracts: Array<[RegExp, string]> = [
+        [/\bcdi\b/, "CDI"],
+        [/\bcdd\b/, "CDD"],
+        [/\binterim\b/, "Intérim"],
+        [/\balternance\b/, "Alternance"],
+        [/\bapprentissage\b/, "Apprentissage"],
+        [/\bstage\b/, "Stage"],
+        [/\bfreelance\b/, "Freelance"],
+        [/\bindependant\b/, "Indépendant"],
+    ];
+    return contracts.find(([pattern]) => pattern.test(normalized))?.[1] ?? "";
+}
+
+function cleanPublishedAt(value: string): string {
+    const candidate = value.replace(/\s+/g, " ").trim().replace(/^publi(?:é|ée|e)\s+/i, "");
+    if (/^(?:\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?)?|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})$/i.test(candidate))
+        return candidate;
+    if (/^(?:moins d'une heure|il y a \d+\s*(?:minute|heure|jour)s?|hier|aujourd'hui|aujourd’hui)$/i.test(candidate))
+        return candidate;
+    return "";
+}
+
 export function writeCsv(offers: CsvOffer[]): string {
     const headers = [
         "site",
@@ -34,15 +58,11 @@ export function writeCsv(offers: CsvOffer[]): string {
         const fields = extra && typeof extra === "object" ? (extra as Record<string, unknown>) : {};
         const visibleInfo = Array.isArray(fields.visibleInfo) ? fields.visibleInfo : [];
         const searchableInfo = visibleInfo.map(asText).join(" | ");
-        const contract =
-            asText(fields.contract) ||
-            searchableInfo.match(/CDI|CDD|Intérim|Alternance|Freelance|Indépendant/i)?.[0] ||
-            "";
+        const contract = cleanContract(asText(fields.contract) || searchableInfo.split(" | ").find((value) => cleanContract(value)) || "");
         const location =
             asText(fields.location) || searchableInfo.match(/[^|]*(?:\(\d{2}\)|-\s*\d{2})[^|]*/i)?.[0]?.trim() || "";
-        const publishedAt =
-            asText(fields.publishedAt) ||
-            searchableInfo.match(/[^|]*(?:il y a|hier|aujourd'hui|\d+\s*(?:heure|jour))/i)?.[0]?.trim() ||
+        const publishedAt = cleanPublishedAt(asText(fields.publishedAt)) ||
+            searchableInfo.split(" | ").map(cleanPublishedAt).find(Boolean) ||
             "";
 
         return [
