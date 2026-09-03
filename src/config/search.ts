@@ -1,3 +1,5 @@
+type FranceTravailRadiusKm = 5 | 10 | 20 | 30 | 40 | 50 | 100;
+
 export const searchConfig = {
     history: {
         enabled: true,
@@ -8,35 +10,39 @@ export const searchConfig = {
             franceTravail: true,
             meteojob: true,
             hellowork: true,
-            glassdoor: true,
-            cadremploi: true,
-            apec: true,
+            glassdoor: false,
+            cadremploi: false,
+            apec: false,
             jobijoba: false,
         },
     },
     location: {
-        city: "Trappes",
-        postalCode: "78190",
+        city: "Coignières",
+        postalCode: "78310",
         departmentCode: "78",
-        inseeCode: "78621",
-        radiusKm: 10,
+        inseeCode: "78168",
+        radiusKm: 15,
     },
     filters: {
         excludedBroadLocations: ["Île-de-France"],
         excludedContracts: ["Alternance", "Stage"],
     },
     franceTravail: {
-        locationCode: "78621",
+        locationCode: "78168",
+        radiusKm: 20 as FranceTravailRadiusKm,
+        api: {
+            enabled: true,
+        },
     },
     apec: {
-        locationId: "592230",
+        locationId: "592050",
     },
     glassdoor: {
-        locationPath: "trappes-emplois-SRCH_IL.0,7_IC2941075.htm",
-        radiusMiles: 10,
+        locationPath: "coignieres-emplois-SRCH_IL.0,10.htm",
+        radiusMiles: 15,
     },
     cadremploi: {
-        locationSlug: "trappes-78",
+        locationSlug: "coignieres-78",
     },
     jobijoba: {
         radiusKm: 15,

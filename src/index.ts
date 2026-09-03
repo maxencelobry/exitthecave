@@ -12,21 +12,43 @@ import { enrichOffers, filterOffers } from "./filters/offers.js";
 import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
 import { searchConfig } from "./config/search.js";
 import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./storage/offer-history.js";
+import { FranceTravailApiScrapper } from "./scrappers/francetravail-api/scrapper.js";
+
+type Offer = { title: string; url: string; extra: unknown };
+
+function mergeOffers(primary: Offer[], supplemental: Offer[]): Offer[] {
+    const merged = new Map(primary.map((offer) => [offer.url, offer]));
+    for (const offer of supplemental) {
+        const existing = merged.get(offer.url);
+        if (!existing) {
+            merged.set(offer.url, offer);
+            continue;
+        }
+        const existingExtra = existing.extra && typeof existing.extra === "object" ? existing.extra : {};
+        const supplementalExtra = offer.extra && typeof offer.extra === "object" ? offer.extra : {};
+        merged.set(offer.url, { ...existing, ...offer, extra: { ...existingExtra, ...supplementalExtra } });
+    }
+    return [...merged.values()];
+}
 
 (async () => {
     const enabled = searchConfig.scrapers.enabled;
-    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] = await Promise.all([
-        enabled.franceTravail ? new FranceTravailScrapper().scrap() : Promise.resolve([]),
-        enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
-        enabled.hellowork ? new HelloworkScrapper().scrap() : Promise.resolve([]),
-        enabled.glassdoor ? new GlassdoorScrapper().scrap() : Promise.resolve([]),
-        enabled.cadremploi ? new CadremploiScrapper().scrap() : Promise.resolve([]),
-        enabled.apec ? new ApecScrapper().scrap() : Promise.resolve([]),
-        enabled.jobijoba ? new JobijobaScrapper().scrap() : Promise.resolve([]),
-    ]);
+    const [franceTravailBrowser, franceTravailApi, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] =
+        await Promise.all([
+            enabled.franceTravail ? new FranceTravailScrapper().scrap() : Promise.resolve([]),
+            enabled.franceTravail && searchConfig.franceTravail.api.enabled
+                ? new FranceTravailApiScrapper().scrap()
+                : Promise.resolve([]),
+            enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
+            enabled.hellowork ? new HelloworkScrapper().scrap() : Promise.resolve([]),
+            enabled.glassdoor ? new GlassdoorScrapper().scrap() : Promise.resolve([]),
+            enabled.cadremploi ? new CadremploiScrapper().scrap() : Promise.resolve([]),
+            enabled.apec ? new ApecScrapper().scrap() : Promise.resolve([]),
+            enabled.jobijoba ? new JobijobaScrapper().scrap() : Promise.resolve([]),
+        ]);
 
     const results = {
-        franceTravail: filterOffers(enrichOffers(franceTravail)),
+        franceTravail: filterOffers(enrichOffers(mergeOffers(franceTravailBrowser, franceTravailApi))),
         meteojob: filterOffers(enrichOffers(meteojob)),
         hellowork: filterOffers(enrichOffers(hellowork)),
         glassdoor: filterOffers(enrichOffers(glassdoor)),

@@ -17,7 +17,7 @@ export const searchConfigExample = {
             franceTravail: true,
             meteojob: true,
             hellowork: true,
-            glassdoor: true,
+            glassdoor: false,
             cadremploi: true,
             apec: true,
             jobijoba: false,
@@ -26,12 +26,12 @@ export const searchConfigExample = {
 
     location: {
         // Name used by HelloWork and Meteojob.
-        city: "Trappes",
-        postalCode: "78190",
+        city: "Coignières",
+        postalCode: "78310",
         departmentCode: "78",
         // INSEE code of the municipality, available from the INSEE website
         // or in the France Travail search URL.
-        inseeCode: "78621",
+        inseeCode: "78168",
         radiusKm: 10,
     },
 
@@ -44,26 +44,32 @@ export const searchConfigExample = {
 
     franceTravail: {
         // Location identifier used by France Travail:
-        // /offres/emploi/trappes/v236 -> locationCode = "78621"
-        locationCode: "78621",
+        // /offres/emploi/coignieres/... -> locationCode = "78168"
+        locationCode: "78168",
+        // France Travail supports radius values such as 5, 10 and 20 km.
+        radiusKm: 20,
+        api: {
+            // The API complements the browser scraper and removes the 1,000-result UI limit.
+            enabled: true,
+        },
     },
 
     apec: {
         // APEC location identifier from the Location field autocomplete.
         // Endpoint : /cms/webservices/autocompletion/lieuautocomplete?q=VILLE
-        locationId: "592230",
+        locationId: "592050",
     },
 
     glassdoor: {
         // Copy the path after /Emploi/ from the Glassdoor URL.
-        locationPath: "trappes-emplois-SRCH_IL.0,7_IC2941075.htm",
+        locationPath: "coignieres-emplois-SRCH_IL.0,10.htm",
         // Glassdoor expects miles: 10 km is approximately 7 miles.
         radiusMiles: 7,
     },
 
     cadremploi: {
         // Slug used in the URL: city + department.
-        locationSlug: "trappes-78",
+        locationSlug: "coignieres-78",
     },
 
     jobijoba: {
