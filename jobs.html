@@ -3,119 +3,273 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Recherche d'offres</title>
+        <title>Job Hunter</title>
         <style>
             :root {
-                color-scheme: light;
-                font-family: system-ui, sans-serif;
-                background: #eef3f8;
-                color: #17202a;
+                color-scheme: dark;
+                font-family:
+                    Inter,
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                background: #0b1020;
+                color: #edf2ff;
+                --panel: #131a2e;
+                --panel-light: #1a2440;
+                --border: #2b3859;
+                --muted: #94a3c7;
+                --accent: #6ea8fe;
+                --accent-strong: #4f8df7;
+                --success: #54d68c;
+            }
+
+            * {
+                box-sizing: border-box;
             }
 
             body {
-                max-width: 1400px;
+                margin: 0;
+                min-width: 320px;
+                background: radial-gradient(circle at top right, #1b2c54 0, #0b1020 42rem);
+            }
+
+            .shell {
+                width: min(1600px, 100%);
                 margin: 0 auto;
-                padding: 40px 20px 56px;
+                padding: 28px clamp(14px, 3vw, 42px) 48px;
+            }
+
+            header {
+                display: flex;
+                align-items: end;
+                justify-content: space-between;
+                gap: 20px;
+                margin-bottom: 24px;
             }
 
             h1 {
                 margin: 0;
-                font-size: clamp(2rem, 4vw, 3.2rem);
+                font-size: clamp(2rem, 5vw, 4rem);
+                letter-spacing: -0.06em;
+                line-height: 0.95;
+            }
+
+            .subtitle,
+            .hint {
+                color: var(--muted);
+            }
+
+            .subtitle {
+                max-width: 660px;
+                margin: 12px 0 0;
+                line-height: 1.5;
+            }
+
+            .dashboard {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .stat,
+            .toolbar,
+            .table-card {
+                border: 1px solid var(--border);
+                background: color-mix(in srgb, var(--panel) 92%, transparent);
+                box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+            }
+
+            .stat {
+                padding: 15px 18px;
+                border-radius: 14px;
+            }
+
+            .stat strong {
+                display: block;
+                margin-top: 3px;
+                font-size: 1.7rem;
                 letter-spacing: -0.04em;
             }
 
-            .intro {
-                margin-bottom: 24px;
+            .stat span {
+                color: var(--muted);
+                font-size: 0.84rem;
             }
 
-            .intro p {
-                color: #52606d;
-                margin: 8px 0 0;
-            }
-
-            .controls {
-                display: grid;
-                grid-template-columns: minmax(220px, 1fr) 180px 180px 180px;
-                gap: 12px;
-                margin-bottom: 18px;
-                padding: 16px;
-                border: 1px solid #d9e2ec;
+            .profile {
+                margin: 0 0 16px;
+                border: 1px solid var(--border);
                 border-radius: 14px;
-                background: rgba(255, 255, 255, 0.86);
-                box-shadow: 0 12px 30px rgba(30, 55, 80, 0.08);
+                background: rgba(19, 26, 46, 0.82);
+                color: var(--muted);
             }
 
-            .check-control {
-                display: flex;
+            .profile summary {
+                padding: 12px 16px;
+                cursor: pointer;
+                color: #dce6ff;
+                font-weight: 700;
+            }
+
+            .profile p {
+                margin: 0;
+                padding: 0 16px 14px;
+                line-height: 1.6;
+            }
+
+            .toolbar {
+                display: grid;
+                grid-template-columns: minmax(240px, 2fr) repeat(4, minmax(140px, 1fr)) auto;
+                gap: 10px;
                 align-items: center;
-                gap: 8px;
-                min-height: 42px;
-                color: #52606d;
-                font-size: 0.95rem;
-            }
-
-            .check-control input {
-                min-height: auto;
-                accent-color: #0867c7;
+                padding: 12px;
+                margin-bottom: 12px;
+                border-radius: 14px;
             }
 
             input,
             select,
             button {
-                box-sizing: border-box;
-                min-height: 42px;
-                border: 1px solid #c8d0d8;
-                border-radius: 8px;
-                background: white;
-                padding: 8px 12px;
+                width: 100%;
+                min-height: 43px;
+                border: 1px solid var(--border);
+                border-radius: 9px;
+                padding: 9px 12px;
+                background: #0f1629;
+                color: inherit;
                 font: inherit;
+            }
+
+            input::placeholder {
+                color: #7180a2;
             }
 
             input:focus,
             select:focus,
             button:focus-visible {
-                outline: 3px solid rgba(8, 103, 199, 0.2);
-                border-color: #0867c7;
+                outline: 3px solid rgba(110, 168, 254, 0.25);
+                border-color: var(--accent);
             }
 
             button {
+                width: auto;
                 cursor: pointer;
-                border-color: #0867c7;
-                background: #0867c7;
-                color: white;
+                border-color: var(--accent-strong);
+                background: var(--accent-strong);
                 font-weight: 700;
+                white-space: nowrap;
             }
 
             button.secondary {
-                border-color: #c8d0d8;
-                background: white;
-                color: #17202a;
+                border-color: var(--border);
+                background: transparent;
             }
 
-            .status {
-                margin: 12px 0;
-                color: #52606d;
-                font-size: 0.95rem;
+            .file-input {
+                display: none;
             }
 
-            .table-wrap {
-                overflow-x: auto;
-                background: white;
-                border-radius: 10px;
-                border: 1px solid #d9e2ec;
-                box-shadow: 0 12px 30px rgba(30, 55, 80, 0.08);
+            .file-label {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 43px;
+                padding: 9px 12px;
+                border: 1px solid var(--border);
+                border-radius: 9px;
+                color: var(--muted);
+                cursor: pointer;
+                white-space: nowrap;
+            }
+
+            .columns-menu {
+                grid-column: 1 / -1;
+                border-top: 1px solid rgba(43, 56, 89, 0.72);
+                padding-top: 10px;
+            }
+
+            .columns-menu summary {
+                width: fit-content;
+                color: var(--muted);
+                cursor: pointer;
+                font-size: 0.86rem;
+                font-weight: 700;
+                user-select: none;
+            }
+
+            .column-options {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 14px;
+                margin-top: 10px;
+            }
+
+            .column-options label {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: #cbd7f4;
+                cursor: pointer;
+                font-size: 0.82rem;
+            }
+
+            .column-options input {
+                width: 16px;
+                min-height: 16px;
+                accent-color: var(--accent);
+                cursor: pointer;
+            }
+
+            table[data-hidden~="site"] .column-site,
+            table[data-hidden~="title"] .column-title,
+            table[data-hidden~="company"] .column-company,
+            table[data-hidden~="location"] .column-location,
+            table[data-hidden~="contract"] .column-contract,
+            table[data-hidden~="salary"] .column-salary,
+            table[data-hidden~="date"] .column-date,
+            table[data-hidden~="description"] .column-description,
+            table[data-hidden~="tracking"] .column-tracking {
+                display: none;
+            }
+
+            .status-line {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                min-height: 28px;
+                margin: 10px 2px;
+                color: var(--muted);
+                font-size: 0.9rem;
+            }
+
+            .table-card {
+                overflow: hidden;
+                border-radius: 16px;
+            }
+
+            .table-scroll {
+                max-height: min(70vh, 820px);
+                overflow: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
             }
 
             table {
                 width: 100%;
-                border-collapse: collapse;
-                min-width: 900px;
+                min-width: 1180px;
+                border-collapse: separate;
+                border-spacing: 0;
+                table-layout: fixed;
             }
 
             th,
             td {
-                padding: 11px 12px;
-                border-bottom: 1px solid #e7ebef;
+                padding: 12px 14px;
+                border-bottom: 1px solid rgba(43, 56, 89, 0.72);
                 text-align: left;
                 vertical-align: top;
             }
@@ -123,100 +277,434 @@
             th {
                 position: sticky;
                 top: 0;
-                background: #e9eef3;
-                white-space: nowrap;
+                z-index: 2;
+                color: #cbd7f4;
+                background: #18233d;
+                font-size: 0.78rem;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
             }
 
-            tbody tr:hover {
-                background: #f6faff;
+            th:nth-child(1) {
+                width: 105px;
             }
 
-            td:last-child {
-                min-width: 320px;
-                color: #52606d;
+            th:nth-child(2) {
+                width: 265px;
+            }
+
+            th:nth-child(3) {
+                width: 165px;
+            }
+
+            th:nth-child(4) {
+                width: 180px;
+            }
+
+            th:nth-child(5) {
+                width: 105px;
+            }
+
+            th:nth-child(6) {
+                width: 150px;
+            }
+
+            th:nth-child(7) {
+                width: 130px;
+            }
+
+            th:nth-child(9) {
+                width: 76px;
+            }
+
+            tbody tr:not(.spacer):hover {
+                background: rgba(110, 168, 254, 0.07);
+            }
+
+            tbody tr.visited {
+                background: rgba(84, 214, 140, 0.06);
+            }
+
+            tbody tr.visited td:first-child {
+                border-left: 3px solid var(--success);
+            }
+
+            td {
+                color: #d9e2f7;
+                font-size: 0.9rem;
+                line-height: 1.4;
+                overflow-wrap: anywhere;
+            }
+
+            td.description {
+                color: var(--muted);
             }
 
             a {
-                color: #0867c7;
+                color: var(--accent);
+                font-weight: 700;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            .site-badge,
+            .visited-badge {
+                display: inline-flex;
+                align-items: center;
+                border-radius: 999px;
+                padding: 4px 8px;
+                background: var(--panel-light);
+                color: #c9d6f2;
+                font-size: 0.76rem;
+                font-weight: 700;
+            }
+
+            .visited-badge {
+                margin-top: 6px;
+                background: rgba(84, 214, 140, 0.14);
+                color: var(--success);
+            }
+
+            .fit-badge {
+                display: inline-flex;
+                margin-top: 6px;
+                border-radius: 999px;
+                padding: 3px 7px;
+                background: rgba(110, 168, 254, 0.14);
+                color: var(--accent);
+                font-size: 0.72rem;
+                font-weight: 800;
+            }
+
+            .follow-box {
+                display: grid;
+                place-items: center;
+                min-height: 40px;
+            }
+
+            .follow-box input {
+                width: 20px;
+                min-height: 20px;
+                accent-color: var(--success);
+                cursor: pointer;
             }
 
             .empty {
-                padding: 32px;
+                padding: 48px;
+                color: var(--muted);
                 text-align: center;
-                color: #52606d;
             }
 
-            @media (max-width: 800px) {
-                .controls {
-                    grid-template-columns: 1fr;
+            @media (max-width: 1050px) {
+                .toolbar {
+                    grid-template-columns: 2fr 1fr 1fr 1fr;
+                }
+
+                .toolbar .search-field {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 680px) {
+                .shell {
+                    padding: 20px 10px 36px;
+                }
+
+                header {
+                    display: block;
+                }
+
+                .dashboard {
+                    gap: 8px;
+                }
+
+                .stat {
+                    padding: 12px;
+                }
+
+                .stat strong {
+                    font-size: 1.35rem;
+                }
+
+                .toolbar,
+                .toolbar .search-field {
+                    grid-column: auto;
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .toolbar .search-field,
+                .toolbar .file-label,
+                .toolbar button {
+                    grid-column: span 2;
+                }
+
+                .table-scroll {
+                    max-height: 68vh;
+                    touch-action: pan-x pan-y;
+                }
+
+                .status-line {
+                    display: block;
                 }
             }
         </style>
     </head>
     <body>
-        <header class="intro">
-            <h1>Recherche d'offres</h1>
-            <p>Charge <code>data/jobs.csv</code> pour retrouver rapidement les offres à candidater.</p>
-        </header>
+        <main class="shell">
+            <header>
+                <div>
+                    <h1>Job Hunter</h1>
+                    <p class="subtitle">
+                        Recherche rapide dans tes offres. Ouvre les annonces, suis ta progression et postule sans perdre
+                        de temps.
+                    </p>
+                </div>
+            </header>
 
-        <div class="controls">
-            <input id="file" type="file" accept=".csv,text/csv" />
-            <input id="search" type="search" placeholder="Rechercher une offre..." />
-            <select id="site">
-                <option value="">Tous les sites</option>
-            </select>
-            <select id="contract">
-                <option value="">Tous les contrats</option>
-            </select>
-            <select id="sort">
-                <option value="newest">Plus récentes en premier</option>
-                <option value="oldest">Plus anciennes en premier</option>
-            </select>
-            <label class="check-control"><input id="unapplied" type="checkbox" /> À postuler uniquement</label>
-            <button id="load">Charger le CSV</button>
-            <button id="clear" class="secondary" type="button">Réinitialiser</button>
-        </div>
+            <section class="dashboard" aria-label="Statistiques">
+                <div class="stat"><span>Résultats visibles</span><strong id="visible-count">0</strong></div>
+                <div class="stat"><span>Offres chargées</span><strong id="total-count">0</strong></div>
+                <div class="stat"><span>Déjà consultées</span><strong id="visited-count">0</strong></div>
+            </section>
 
-        <div id="status" class="status">Aucun fichier chargé.</div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Site</th>
-                        <th>Intitulé</th>
-                        <th>Entreprise</th>
-                        <th>Localisation</th>
-                        <th>Contrat</th>
-                        <th>Salaire</th>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Suivi</th>
-                    </tr>
-                </thead>
-                <tbody id="results">
-                    <tr>
-                        <td class="empty" colspan="9">Charge un fichier CSV pour commencer.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <details class="profile">
+                <summary>Profil CV actif · classement automatique</summary>
+                <p>
+                    Assistant administratif polyvalent · secrétariat · accueil · back-office · gestion de dossiers ·
+                    saisie et contrôle de données · procédures · confidentialité · rigueur · autonomie · service client
+                    · Word · Excel · Outlook · Google Workspace · Kalilab · laboratoire · juridique · anglais
+                    professionnel · italien conversationnel · permis B.
+                </p>
+            </details>
+
+            <section class="toolbar" aria-label="Filtres">
+                <input
+                    class="search-field"
+                    id="search"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Rechercher un poste, une ville, une entreprise..."
+                />
+                <input
+                    id="excluded-companies"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Entreprises ignorées : IFAE, AXA..."
+                    aria-label="Entreprises à ignorer, séparées par des virgules"
+                />
+                <select id="site" aria-label="Filtrer par site">
+                    <option value="">Tous les sites</option>
+                </select>
+                <select id="contract" aria-label="Filtrer par contrat">
+                    <option value="">Tous les contrats</option>
+                </select>
+                <select id="status-filter" aria-label="Filtrer par suivi">
+                    <option value="all">Toutes les offres</option>
+                    <option value="unvisited">Pas encore ouvertes</option>
+                    <option value="visited">Déjà ouvertes</option>
+                    <option value="applied">Déjà traitées</option>
+                </select>
+                <select id="fit-filter" aria-label="Filtrer par compatibilité">
+                    <option value="all">Toutes compatibilités</option>
+                    <option value="80">Très pertinentes · 80%+</option>
+                    <option value="60">Pertinentes · 60%+</option>
+                </select>
+                <select id="sort" aria-label="Trier">
+                    <option value="fit">Compatibilité CV</option>
+                    <option value="newest">Plus récentes</option>
+                    <option value="oldest">Plus anciennes</option>
+                </select>
+                <label class="file-label" for="file">Importer un CSV</label>
+                <input class="file-input" id="file" type="file" accept=".csv,text/csv" />
+                <button id="load" class="secondary" type="button">Recharger jobs.csv</button>
+                <button id="clear" class="secondary" type="button">Réinitialiser</button>
+                <details class="columns-menu">
+                    <summary>Colonnes affichées</summary>
+                    <div class="column-options">
+                        <label><input type="checkbox" data-column="site" checked /> Site</label>
+                        <label><input type="checkbox" data-column="title" checked /> Intitulé</label>
+                        <label><input type="checkbox" data-column="company" checked /> Entreprise</label>
+                        <label><input type="checkbox" data-column="location" checked /> Localisation</label>
+                        <label><input type="checkbox" data-column="contract" checked /> Contrat</label>
+                        <label><input type="checkbox" data-column="salary" checked /> Salaire</label>
+                        <label><input type="checkbox" data-column="date" checked /> Date</label>
+                        <label><input type="checkbox" data-column="description" checked /> Description</label>
+                        <label><input type="checkbox" data-column="tracking" checked /> Suivi</label>
+                    </div>
+                </details>
+            </section>
+
+            <div class="status-line">
+                <span id="status">Aucun fichier chargé.</span
+                ><span class="hint">Les liens ouverts sont mémorisés sur cet appareil.</span>
+            </div>
+
+            <section class="table-card">
+                <div id="table-scroll" class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                        <th class="column-site">Site</th>
+                        <th class="column-title">Intitulé</th>
+                        <th class="column-company">Entreprise</th>
+                        <th class="column-location">Localisation</th>
+                        <th class="column-contract">Contrat</th>
+                        <th class="column-salary">Salaire</th>
+                        <th class="column-date">Date</th>
+                        <th class="column-description">Description</th>
+                        <th class="column-tracking">Suivi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results">
+                            <tr>
+                                <td class="empty" colspan="9">Charge un fichier CSV pour commencer.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
 
         <script>
+            const STORAGE_VISITED = "jobs-visited";
+            const STORAGE_APPLIED = "jobs-applied";
+            const STORAGE_EXCLUDED_COMPANIES = "jobs-excluded-companies";
+            const PROFILE_KEYWORDS = [
+                ["assistant administratif", 10],
+                ["assistante administrative", 10],
+                ["secrétaire administratif", 10],
+                ["secrétaire administrative", 10],
+                ["secrétariat", 8],
+                ["secrétaire", 7],
+                ["assistant", 5],
+                ["accueil", 7],
+                ["standardiste", 7],
+                ["back-office", 7],
+                ["gestion administrative", 8],
+                ["gestionnaire administratif", 9],
+                ["gestionnaire administrative", 9],
+                ["employé polyvalent", 5],
+                ["gestion de dossiers", 8],
+                ["suivi de dossiers", 8],
+                ["saisie", 5],
+                ["contrôle de données", 7],
+                ["contrôle des données", 7],
+                ["enregistrement", 5],
+                ["courriers", 5],
+                ["classement", 5],
+                ["organisation", 4],
+                ["coordination", 5],
+                ["procédures", 5],
+                ["traçabilité", 5],
+                ["confidentialité", 6],
+                ["secret professionnel", 7],
+                ["relation client", 6],
+                ["service client", 6],
+                ["gestion des priorités", 5],
+                ["rigueur", 4],
+                ["autonomie", 4],
+                ["fiabilité", 4],
+                ["discrétion", 4],
+                ["esprit d'équipe", 3],
+                ["bureautique", 5],
+                ["pack office", 6],
+                ["microsoft office", 5],
+                ["word", 4],
+                ["excel", 5],
+                ["outlook", 4],
+                ["google workspace", 5],
+                ["kalilab", 7],
+                ["laboratoire", 5],
+                ["toxicologie", 6],
+                ["cabinet d'avocats", 6],
+                ["cabinet d’avocats", 6],
+                ["juridique", 5],
+                ["droit", 3],
+                ["anglais professionnel", 4],
+                ["anglais", 3],
+                ["italien", 2],
+                ["permis b", 3],
+                ["véhicule", 2],
+                ["temps plein", 2],
+                ["35h", 3],
+                ["cdi", 4],
+                ["cdd", 3],
+            ];
+            const ROW_HEIGHT = 86;
+            const OVERSCAN = 8;
             let offers = [];
-            const applied = new Set(JSON.parse(localStorage.getItem("jobs-applied") || "[]"));
+            let filtered = [];
+            let renderFrame = 0;
+            let visited = readSet(STORAGE_VISITED);
+            let applied = readSet(STORAGE_APPLIED);
 
             const elements = {
                 file: document.querySelector("#file"),
                 search: document.querySelector("#search"),
+                excludedCompanies: document.querySelector("#excluded-companies"),
                 site: document.querySelector("#site"),
                 contract: document.querySelector("#contract"),
+                statusFilter: document.querySelector("#status-filter"),
+                fitFilter: document.querySelector("#fit-filter"),
                 sort: document.querySelector("#sort"),
                 load: document.querySelector("#load"),
                 clear: document.querySelector("#clear"),
-                unapplied: document.querySelector("#unapplied"),
                 status: document.querySelector("#status"),
+                visibleCount: document.querySelector("#visible-count"),
+                totalCount: document.querySelector("#total-count"),
+                visitedCount: document.querySelector("#visited-count"),
+                scroll: document.querySelector("#table-scroll"),
                 results: document.querySelector("#results"),
+                table: document.querySelector("table"),
+                columnInputs: [...document.querySelectorAll("[data-column]")],
             };
+
+            const STORAGE_COLUMNS = "jobs-visible-columns";
+
+            function readSet(key) {
+                try {
+                    const value = JSON.parse(localStorage.getItem(key) || "[]");
+                    return new Set(Array.isArray(value) ? value : []);
+                } catch {
+                    return new Set();
+                }
+            }
+
+            function saveSet(key, value) {
+                localStorage.setItem(key, JSON.stringify([...value]));
+            }
+
+            function loadColumnVisibility() {
+                let hidden = [];
+                try {
+                    hidden = JSON.parse(localStorage.getItem(STORAGE_COLUMNS) || "[]");
+                } catch {
+                    hidden = [];
+                }
+                const hiddenSet = new Set(Array.isArray(hidden) ? hidden : []);
+                elements.columnInputs.forEach((input) => {
+                    input.checked = !hiddenSet.has(input.dataset.column);
+                });
+                updateColumnVisibility(false);
+            }
+
+            function updateColumnVisibility(save = true) {
+                const hidden = elements.columnInputs
+                    .filter((input) => !input.checked)
+                    .map((input) => input.dataset.column);
+                elements.table.dataset.hidden = hidden.join(" ");
+                if (save) localStorage.setItem(STORAGE_COLUMNS, JSON.stringify(hidden));
+            }
+
+            function excludedCompanyNames() {
+                return elements.excludedCompanies.value
+                    .split(",")
+                    .map((value) => value.trim().toLocaleLowerCase("fr"))
+                    .filter(Boolean);
+            }
 
             function parseCsv(text) {
                 const rows = [];
@@ -231,26 +719,20 @@
                     if (character === '"' && quoted && next === '"') {
                         cell += '"';
                         index += 1;
-                        continue;
-                    }
-                    if (character === '"') {
+                    } else if (character === '"') {
                         quoted = !quoted;
-                        continue;
-                    }
-                    if (character === ";" && !quoted) {
+                    } else if (character === ";" && !quoted) {
                         row.push(cell);
                         cell = "";
-                        continue;
-                    }
-                    if ((character === "\n" || character === "\r") && !quoted) {
+                    } else if ((character === "\n" || character === "\r") && !quoted) {
                         if (character === "\r" && next === "\n") index += 1;
                         row.push(cell);
                         cell = "";
                         if (row.some((value) => value !== "")) rows.push(row);
                         row = [];
-                        continue;
+                    } else {
+                        cell += character;
                     }
-                    cell += character;
                 }
                 if (cell || row.length) {
                     row.push(cell);
@@ -258,117 +740,227 @@
                 }
 
                 const headers = rows.shift() || [];
-                return rows.map((values) =>
-                    Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])),
-                );
+                return rows.map((values) => {
+                    const offer = Object.fromEntries(headers.map((header, index) => [header, values[index] || ""]));
+                    offer._key = offer.lien || `${offer.site}|${offer.intitulé}|${offer.localisation}`;
+                    offer._search = Object.values(offer).join(" ").toLocaleLowerCase("fr");
+                    offer._fit = fitScore(offer);
+                    return offer;
+                });
+            }
+
+            function fitScore(offer) {
+                const title = String(offer.intitulé || "").toLocaleLowerCase("fr");
+                const text = String(offer._search || "");
+                let score = 0;
+                let total = 0;
+                PROFILE_KEYWORDS.forEach(([keyword, weight]) => {
+                    total += weight;
+                    if (text.includes(keyword)) score += title.includes(keyword) ? weight * 1.7 : weight;
+                });
+                const contract = String(offer.contrat || "").toLocaleLowerCase("fr");
+                if (/cdi|cdd/.test(contract)) score += 8;
+                if (/alternance|apprentissage|stage/.test(contract)) score -= 35;
+                return Math.max(0, Math.min(99, Math.round((score / (total * 0.2)) * 100)));
             }
 
             function dateValue(value) {
-                const text = String(value || "").toLowerCase();
+                const text = String(value || "").toLocaleLowerCase("fr");
                 const now = Date.now();
-                if (/aujourd'hui|aujourd’hui/.test(text)) return now;
+                if (/aujourd'hui|aujourd’hui|moins d'une heure/.test(text)) return now;
                 if (/hier/.test(text)) return now - 86400000;
                 const relative = text.match(/(?:il y a|il y a environ)\s+(\d+)\s*(minute|heure|jour|semaine)/);
                 if (relative) {
-                    const units = {
-                        minute: 60000,
-                        heure: 3600000,
-                        jour: 86400000,
-                        semaine: 604800000,
-                    };
+                    const units = { minute: 60000, heure: 3600000, jour: 86400000, semaine: 604800000 };
                     return now - Number(relative[1]) * units[relative[2]];
                 }
+                const frenchDate = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+                if (frenchDate)
+                    return new Date(
+                        `${frenchDate[3].length === 2 ? `20${frenchDate[3]}` : frenchDate[3]}-${frenchDate[2]}-${frenchDate[1]}`,
+                    ).getTime();
                 const parsed = Date.parse(value);
                 return Number.isNaN(parsed) ? 0 : parsed;
             }
 
             function addOptions(select, values) {
                 select.querySelectorAll("option:not(:first-child)").forEach((option) => option.remove());
-                [...values].sort().forEach((value) => {
-                    const option = document.createElement("option");
-                    option.value = value;
-                    option.textContent = value;
-                    select.append(option);
+                [...values]
+                    .sort((a, b) => a.localeCompare(b, "fr"))
+                    .forEach((value) => {
+                        const option = document.createElement("option");
+                        option.value = value;
+                        option.textContent = value;
+                        select.append(option);
+                    });
+            }
+
+            function applyFilters() {
+                const query = elements.search.value.trim().toLocaleLowerCase("fr");
+                const excludedCompanies = excludedCompanyNames();
+                const site = elements.site.value;
+                const contract = elements.contract.value;
+                const statusFilter = elements.statusFilter.value;
+                const fitFilter = Number(elements.fitFilter.value);
+                filtered = offers.filter((offer) => {
+                    const isVisited = visited.has(offer._key);
+                    const isApplied = applied.has(offer._key);
+                    return (
+                        (!query || offer._search.includes(query)) &&
+                        !excludedCompanies.some((name) =>
+                            String(offer.entreprise || "").toLocaleLowerCase("fr").includes(name),
+                        ) &&
+                        (!site || offer.site === site) &&
+                        (!contract || offer.contrat === contract) &&
+                        (!fitFilter || offer._fit >= fitFilter) &&
+                        (statusFilter === "all" ||
+                            (statusFilter === "visited" && isVisited) ||
+                            (statusFilter === "unvisited" && !isVisited) ||
+                            (statusFilter === "applied" && isApplied))
+                    );
+                });
+                filtered.sort((first, second) => {
+                    if (elements.sort.value === "fit") {
+                        return (
+                            second._fit - first._fit ||
+                            dateValue(second.date_publication) - dateValue(first.date_publication)
+                        );
+                    }
+                    const difference = dateValue(second.date_publication) - dateValue(first.date_publication);
+                    return elements.sort.value === "newest" ? difference : -difference;
+                });
+                elements.visibleCount.textContent = filtered.length.toLocaleString("fr-FR");
+                elements.totalCount.textContent = offers.length.toLocaleString("fr-FR");
+                elements.visitedCount.textContent = offers
+                    .filter((offer) => visited.has(offer._key))
+                    .length.toLocaleString("fr-FR");
+                elements.status.textContent = `${filtered.length.toLocaleString("fr-FR")} offre(s) affichée(s) sur ${offers.length.toLocaleString("fr-FR")}.`;
+                elements.scroll.scrollTop = 0;
+                renderWindow();
+            }
+
+            function renderWindow() {
+                cancelAnimationFrame(renderFrame);
+                renderFrame = requestAnimationFrame(() => {
+                    const start = Math.max(0, Math.floor(elements.scroll.scrollTop / ROW_HEIGHT) - OVERSCAN);
+                    const visibleRows = Math.ceil(elements.scroll.clientHeight / ROW_HEIGHT) + OVERSCAN * 2;
+                    const end = Math.min(filtered.length, start + visibleRows);
+                    const fragment = document.createDocumentFragment();
+                    if (start > 0) {
+                        const spacer = document.createElement("tr");
+                        spacer.className = "spacer";
+                        spacer.innerHTML = `<td colspan="9" style="height:${start * ROW_HEIGHT}px;padding:0;border:0"></td>`;
+                        fragment.append(spacer);
+                    }
+                    filtered.slice(start, end).forEach((offer) => fragment.append(createRow(offer)));
+                    if (end < filtered.length) {
+                        const spacer = document.createElement("tr");
+                        spacer.className = "spacer";
+                        spacer.innerHTML = `<td colspan="9" style="height:${(filtered.length - end) * ROW_HEIGHT}px;padding:0;border:0"></td>`;
+                        fragment.append(spacer);
+                    }
+                    elements.results.replaceChildren(fragment);
                 });
             }
 
-            function render() {
-                const query = elements.search.value.trim().toLowerCase();
-                const filtered = offers
-                    .filter((offer) => {
-                        const haystack = Object.values(offer).join(" ").toLowerCase();
-                        return (
-                            (!query || haystack.includes(query)) &&
-                            (!elements.site.value || offer.site === elements.site.value) &&
-                            (!elements.contract.value || offer.contrat === elements.contract.value) &&
-                            (!elements.unapplied.checked || !applied.has(offer.lien))
-                        );
-                    })
-                    .sort((first, second) => {
-                        const difference = dateValue(second.date_publication) - dateValue(first.date_publication);
-                        return elements.sort.value === "newest" ? difference : -difference;
-                    });
-
-                elements.status.textContent = `${filtered.length} offre(s) affichée(s) sur ${offers.length}.`;
-                elements.results.replaceChildren();
-                if (!filtered.length) {
-                    const row = document.createElement("tr");
-                    row.innerHTML = '<td class="empty" colspan="9">Aucune offre ne correspond à la recherche.</td>';
-                    elements.results.append(row);
-                    return;
-                }
-
-                filtered.forEach((offer) => {
-                    const row = document.createElement("tr");
-                    const link = document.createElement("a");
-                    link.href = offer.lien;
-                    link.target = "_blank";
-                    link.rel = "noreferrer";
-                    link.textContent = offer.intitulé || "Sans intitulé";
-                    const tracking = document.createElement("input");
-                    tracking.type = "checkbox";
-                    tracking.checked = applied.has(offer.lien);
-                    tracking.title = "Marquer cette offre comme déjà traitée";
-                    tracking.addEventListener("change", () => {
-                        if (tracking.checked) applied.add(offer.lien);
-                        else applied.delete(offer.lien);
-                        localStorage.setItem("jobs-applied", JSON.stringify([...applied]));
-                        if (elements.unapplied.checked) render();
-                    });
-                    const values = [
-                        offer.site,
-                        link,
-                        offer.entreprise,
-                        offer.localisation,
-                        offer.contrat,
-                        offer.salaire,
-                        offer.date_publication,
-                        offer.description,
-                        tracking,
-                    ];
-                    values.forEach((value) => {
-                        const cell = document.createElement("td");
-                        cell.append(value instanceof Node ? value : document.createTextNode(value || ""));
-                        row.append(cell);
-                    });
-                    elements.results.append(row);
+            function createRow(offer) {
+                const row = document.createElement("tr");
+                const isVisited = visited.has(offer._key);
+                if (isVisited) row.className = "visited";
+                const link = document.createElement("a");
+                link.href = offer.lien;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = offer.intitulé || "Sans intitulé";
+                link.addEventListener("click", () => {
+                    visited.add(offer._key);
+                    saveSet(STORAGE_VISITED, visited);
+                    renderWindow();
+                    elements.visitedCount.textContent = offers
+                        .filter((item) => visited.has(item._key))
+                        .length.toLocaleString("fr-FR");
                 });
+
+                const site = document.createElement("span");
+                site.className = "site-badge";
+                site.textContent = offer.site || "Inconnu";
+                const titleCell = document.createElement("div");
+                titleCell.append(link);
+                if (isVisited) {
+                    const badge = document.createElement("span");
+                    badge.className = "visited-badge";
+                    badge.textContent = "Ouverte";
+                    titleCell.append(document.createElement("br"), badge);
+                }
+                const fitBadge = document.createElement("span");
+                fitBadge.className = "fit-badge";
+                fitBadge.textContent = `${offer._fit}% CV`;
+                titleCell.append(document.createElement("br"), fitBadge);
+
+                const tracking = document.createElement("input");
+                tracking.type = "checkbox";
+                tracking.checked = applied.has(offer._key);
+                tracking.title = "Marquer comme traitée";
+                tracking.addEventListener("change", () => {
+                    if (tracking.checked) applied.add(offer._key);
+                    else applied.delete(offer._key);
+                    saveSet(STORAGE_APPLIED, applied);
+                    if (elements.statusFilter.value === "applied") applyFilters();
+                });
+                const followCell = document.createElement("div");
+                followCell.className = "follow-box";
+                followCell.append(tracking);
+
+                [
+                    site,
+                    titleCell,
+                    offer.entreprise,
+                    offer.localisation,
+                    offer.contrat,
+                    offer.salaire,
+                    offer.date_publication,
+                    offer.description,
+                    followCell,
+                ].forEach((value, index) => {
+                    const cell = document.createElement("td");
+                    const columnNames = [
+                        "site",
+                        "title",
+                        "company",
+                        "location",
+                        "contract",
+                        "salary",
+                        "date",
+                        "description",
+                        "tracking",
+                    ];
+                    cell.className = `column-${columnNames[index]}`;
+                    if (index === 7) cell.classList.add("description");
+                    cell.append(value instanceof Node ? value : document.createTextNode(value || ""));
+                    row.append(cell);
+                });
+                return row;
             }
 
             function loadText(text) {
                 offers = parseCsv(text);
                 addOptions(elements.site, new Set(offers.map((offer) => offer.site).filter(Boolean)));
                 addOptions(elements.contract, new Set(offers.map((offer) => offer.contrat).filter(Boolean)));
-                render();
+                applyFilters();
             }
 
             function resetFilters() {
                 elements.search.value = "";
                 elements.site.value = "";
                 elements.contract.value = "";
-                elements.sort.value = "newest";
-                elements.unapplied.checked = false;
-                render();
+                elements.statusFilter.value = "all";
+                elements.fitFilter.value = "all";
+                elements.sort.value = "fit";
+                applyFilters();
+            }
+
+            function loadExcludedCompanies() {
+                elements.excludedCompanies.value = localStorage.getItem(STORAGE_EXCLUDED_COMPANIES) || "";
             }
 
             elements.file.addEventListener("change", async () => {
@@ -377,17 +969,29 @@
             });
             elements.load.addEventListener("click", async () => {
                 try {
-                    loadText(await (await fetch("data/jobs.csv")).text());
+                    loadText(await (await fetch("data/jobs.csv", { cache: "no-store" })).text());
                 } catch {
                     elements.status.textContent =
-                        "Impossible de charger data/jobs.csv : sélectionne le fichier manuellement.";
+                        "Impossible de charger data/jobs.csv : importe le fichier manuellement.";
                 }
             });
             elements.clear.addEventListener("click", resetFilters);
-            elements.search.addEventListener("input", render);
-            [elements.site, elements.contract, elements.sort, elements.unapplied].forEach((element) =>
-                element.addEventListener("change", render),
+            elements.excludedCompanies.addEventListener("input", () => {
+                localStorage.setItem(STORAGE_EXCLUDED_COMPANIES, elements.excludedCompanies.value);
+                applyFilters();
+            });
+            elements.columnInputs.forEach((input) => input.addEventListener("change", () => updateColumnVisibility()));
+            let searchFrame = 0;
+            elements.search.addEventListener("input", () => {
+                cancelAnimationFrame(searchFrame);
+                searchFrame = requestAnimationFrame(applyFilters);
+            });
+            [elements.site, elements.contract, elements.statusFilter, elements.fitFilter, elements.sort].forEach(
+                (element) => element.addEventListener("change", applyFilters),
             );
+            elements.scroll.addEventListener("scroll", renderWindow, { passive: true });
+            loadColumnVisibility();
+            loadExcludedCompanies();
             elements.load.click();
         </script>
     </body>
