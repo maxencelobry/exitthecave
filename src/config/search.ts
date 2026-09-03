@@ -1,4 +1,8 @@
 export const searchConfig = {
+    history: {
+        enabled: true,
+        directoryName: "results",
+    },
     scrapers: {
         enabled: {
             franceTravail: true,

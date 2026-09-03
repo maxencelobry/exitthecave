@@ -11,6 +11,7 @@ import { writeCsv } from "./exporters/csv.js";
 import { enrichOffers, filterOffers } from "./filters/offers.js";
 import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
 import { searchConfig } from "./config/search.js";
+import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./storage/offer-history.js";
 
 (async () => {
     const enabled = searchConfig.scrapers.enabled;
@@ -33,14 +34,22 @@ import { searchConfig } from "./config/search.js";
         apec: filterOffers(enrichOffers(apec)),
         jobijoba: filterOffers(enrichOffers(jobijoba)),
     };
-    const stats = Object.fromEntries(
-        Object.entries(results).map(([site, offers]) => [site, { offers: offers.length }]),
-    );
     const dataPath = join(process.cwd(), "data");
     const outputPath = join(dataPath, "jobs.json");
     const csvOutputPath = join(dataPath, "jobs.csv");
+    const resultsDirectory = join(dataPath, searchConfig.history.directoryName);
+    const historyPath = join(dataPath, "results.json");
+    const seenUrls = searchConfig.history.enabled
+        ? await loadSeenUrls(resultsDirectory, historyPath, csvOutputPath)
+        : new Set<string>();
+    const freshResults = Object.fromEntries(
+        Object.entries(results).map(([site, offers]) => [site, filterSeenOffers(offers, seenUrls)]),
+    );
+    const skippedOffers =
+        Object.values(results).reduce((total, offers) => total + offers.length, 0) -
+        Object.values(freshResults).reduce((total, offers) => total + offers.length, 0);
     const csvOffers = Object.entries(results).flatMap(([site, offers]) =>
-        offers.map((offer) => ({
+        (freshResults[site] ?? []).map((offer) => ({
             site,
             title: offer.title,
             url: offer.url,
@@ -49,13 +58,26 @@ import { searchConfig } from "./config/search.js";
     );
 
     await mkdir(dataPath, { recursive: true });
-    await writeFile(outputPath, writeJson({ generatedAt: new Date().toISOString(), stats, results }));
-    await writeFile(csvOutputPath, writeCsv(csvOffers), "utf8");
+    const freshStats = Object.fromEntries(
+        Object.entries(freshResults).map(([site, offers]) => [site, { offers: offers.length }]),
+    );
+    await writeFile(
+        outputPath,
+        writeJson({ generatedAt: new Date().toISOString(), stats: freshStats, results: freshResults }),
+    );
+    const csvContent = writeCsv(csvOffers);
+    await writeFile(csvOutputPath, csvContent, "utf8");
+    const archivePath = await archiveCsv(resultsDirectory, csvContent).catch((error) => {
+        console.error(`[History] Impossible d'archiver la collecte : ${String(error)}`);
+        return null;
+    });
 
-    for (const [site, siteStats] of Object.entries(stats))
+    for (const [site, siteStats] of Object.entries(freshStats))
         console.log(`[Stats] ${site} : ${siteStats.offers} offre(s)`);
+    if (searchConfig.history.enabled) console.log(`[History] ${skippedOffers} offre(s) déjà connue(s) ignorée(s)`);
+    if (archivePath) console.log(`[History] Archive CSV sauvegardée : ${archivePath}`);
     console.log(`[Stats] JSON sauvegardé : ${outputPath}`);
     console.log(`[Stats] CSV sauvegardé : ${csvOutputPath} (${csvOffers.length} ligne(s))`);
 
-    console.log(JSON.stringify(results, null, 2));
+    console.log(JSON.stringify(freshResults, null, 2));
 })();
