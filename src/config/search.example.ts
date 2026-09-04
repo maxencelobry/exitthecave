@@ -21,6 +21,7 @@ export const searchConfigExample = {
             cadremploi: true,
             apec: true,
             jobijoba: false,
+            linkedin: false,
         },
     },
 
@@ -75,5 +76,12 @@ export const searchConfigExample = {
     jobijoba: {
         // Jobijoba uses a dedicated perimeter in kilometers.
         radiusKm: 15,
+    },
+
+    linkedin: {
+        // Public-only collection. Do not add cookies or account credentials here.
+        searchUrl:
+            "https://www.linkedin.com/jobs/search-results/?keywords=publi%C3%A9%20au%20cours%20des%20derni%C3%A8res%2024%20heures&origin=SEMANTIC_SEARCH_LANDING_PAGE",
+        maxPages: 50,
     },
 } as const;

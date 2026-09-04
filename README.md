@@ -30,6 +30,8 @@ Useful routes:
 
 The `jobs.html` page can load the API CSV directly with the “Charger l’API” control. Keep `DATABASE_URL` and all scraper credentials on the backend; never put them in frontend code.
 
+LinkedIn is disabled by default. If enabled, it opens a dedicated local browser profile in `storage-state/linkedin-profile`; sign in manually on the first run. The profile is ignored by Git and is never exported.
+
 ## Normalized data
 
 Each stored job separates title, company, location, contract, salary, working time, remote work, experience, skills, publication date, description and source metadata. It also contains freshness and reliability scores. Jobs with the same normalized title, company and location are merged while their source URLs are retained in `extra.sourceUrls`.

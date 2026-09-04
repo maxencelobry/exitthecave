@@ -11,6 +11,7 @@ import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
 import { writeCsv } from "./exporters/csv.js";
 import { enrichOffers, filterOffers } from "./filters/offers.js";
 import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
+import { LinkedinScrapper } from "./scrappers/linkedin/scrapper.js";
 import { searchConfig } from "./config/search.js";
 import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./storage/offer-history.js";
 import type { RawOffer } from "./jobs/model.js";
@@ -18,7 +19,7 @@ import type { FranceTravailApiOptions } from "./scrappers/francetravail/api.js";
 
 export async function collectOffers(options: FranceTravailApiOptions = {}): Promise<RawOffer[]> {
     const enabled = searchConfig.scrapers.enabled;
-    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba] =
+    const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba, linkedin] =
         await Promise.all([
             enabled.franceTravail ? new FranceTravailScrapper().scrap(options) : Promise.resolve([]),
             enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
@@ -27,6 +28,7 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
             enabled.cadremploi ? new CadremploiScrapper().scrap() : Promise.resolve([]),
             enabled.apec ? new ApecScrapper().scrap() : Promise.resolve([]),
             enabled.jobijoba ? new JobijobaScrapper().scrap() : Promise.resolve([]),
+            enabled.linkedin ? new LinkedinScrapper().scrap() : Promise.resolve([]),
         ]);
 
     const results = {
@@ -37,6 +39,7 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
         cadremploi: filterOffers(enrichOffers(cadremploi)),
         apec: filterOffers(enrichOffers(apec)),
         jobijoba: filterOffers(enrichOffers(jobijoba)),
+        linkedin: filterOffers(enrichOffers(linkedin)),
     };
     const allOffers = Object.entries(results).flatMap(([site, offers]) =>
         offers.map((offer) => ({ site, title: offer.title, url: offer.url, extra: offer.extra })),

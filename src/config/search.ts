@@ -14,6 +14,7 @@ export const searchConfig = {
             cadremploi: false,
             apec: false,
             jobijoba: false,
+            linkedin: true,
         },
     },
     location: {
@@ -46,5 +47,10 @@ export const searchConfig = {
     },
     jobijoba: {
         radiusKm: 15,
+    },
+    linkedin: {
+        searchUrl:
+            "https://www.linkedin.com/jobs/search-results/?keywords=publi%C3%A9%20au%20cours%20des%20derni%C3%A8res%2024%20heures&origin=SEMANTIC_SEARCH_LANDING_PAGE",
+        maxPages: 50,
     },
 } as const;
