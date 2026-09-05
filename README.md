@@ -12,7 +12,7 @@ npm start
 
 The collector keeps writing `data/jobs.csv` and `data/jobs.json` for the existing `jobs.html` workflow.
 
-LinkedIn uses a dedicated local browser profile in `data/browser-state/linkedin-profile`. Run `npm run linkedin`, sign in manually in the window that opens on the first run, then rerun the command after the login is complete. The profile is ignored by Git and is never exported.
+LinkedIn uses a dedicated local browser profile in `data/browser-state/linkedin-profile` when enabled in `src/config.ts`. The profile is ignored by Git and is never exported.
 
 ## Normalized data
 

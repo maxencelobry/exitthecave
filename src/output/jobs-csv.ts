@@ -1,4 +1,4 @@
-import type { NormalizedJob } from "../jobs/model.js";
+import type { NormalizedJob } from "../core/job.js";
 
 function csvCell(value: unknown): string {
     const text = value == null ? "" : String(value).replace(/\r?\n|\r/g, " ");

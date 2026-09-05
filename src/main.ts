@@ -1,21 +1,21 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { ApecScrapper } from "./scrappers/apec/scrapper.js";
-import { CadremploiScrapper } from "./scrappers/cadremploi/scrapper.js";
-import { writeJson } from "./exporters/json.js";
-import { FranceTravailScrapper } from "./scrappers/francetravail/scrapper.js";
-import { GlassdoorScrapper } from "./scrappers/glassdoor/scrapper.js";
-import { HelloworkScrapper } from "./scrappers/hellowork/scrapper.js";
-import { MeteojobScrapper } from "./scrappers/meteojob/scrapper.js";
-import { writeCsv } from "./exporters/csv.js";
-import { enrichOffers, filterOffers } from "./utils/filters.js";
-import { JobijobaScrapper } from "./scrappers/jobijoba/scrapper.js";
-import { LinkedinScrapper } from "./scrappers/linkedin/scrapper.js";
+import { ApecScrapper } from "./sites/apec/scrapper.js";
+import { CadremploiScrapper } from "./sites/cadremploi/scrapper.js";
+import { writeJson } from "./output/json.js";
+import { FranceTravailScrapper } from "./sites/francetravail/scrapper.js";
+import { GlassdoorScrapper } from "./sites/glassdoor/scrapper.js";
+import { HelloworkScrapper } from "./sites/hellowork/scrapper.js";
+import { MeteojobScrapper } from "./sites/meteojob/scrapper.js";
+import { writeCsv } from "./output/csv.js";
+import { enrichOffers, filterOffers } from "./core/filters.js";
+import { JobijobaScrapper } from "./sites/jobijoba/scrapper.js";
+import { LinkedinScrapper } from "./sites/linkedin/scrapper.js";
 import { searchConfig } from "./config.js";
-import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./storage/offer-history.js";
-import type { RawOffer } from "./jobs/model.js";
-import type { FranceTravailApiOptions } from "./scrappers/francetravail/api.js";
+import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./core/history.js";
+import type { RawOffer } from "./core/job.js";
+import type { FranceTravailApiOptions } from "./sites/francetravail/api.js";
 
 export async function collectOffers(options: FranceTravailApiOptions = {}): Promise<RawOffer[]> {
     const enabled = searchConfig.scrapers.enabled;

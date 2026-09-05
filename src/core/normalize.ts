@@ -1,4 +1,4 @@
-import type { NormalizedJob, RawOffer } from "./model.js";
+import type { NormalizedJob, RawOffer } from "./job.js";
 
 function text(value: unknown): string | null {
     if (typeof value !== "string") return value == null ? null : String(value);

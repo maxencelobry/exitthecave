@@ -13,9 +13,8 @@
     },
     "scripts": {
         "build": "tsc",
-        "start": "node dist/index.js",
-        "linkedin": "node dist/run-linkedin.js",
-        "test": "tsc && node dist/index.js"
+        "start": "node dist/main.js",
+        "test": "tsc && node dist/main.js"
     },
     "keywords": [],
     "author": "",
