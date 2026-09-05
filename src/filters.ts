@@ -1,4 +1,4 @@
-import { searchConfig } from "../config/search.js";
+import { searchConfig } from "./config.js";
 
 type Offer = {
     title: string;

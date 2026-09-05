@@ -7,9 +7,9 @@ export const searchConfig = {
     },
     scrapers: {
         enabled: {
-            franceTravail: true,
-            meteojob: true,
-            hellowork: true,
+            franceTravail: false,
+            meteojob: false,
+            hellowork: false,
             glassdoor: false,
             cadremploi: false,
             apec: false,

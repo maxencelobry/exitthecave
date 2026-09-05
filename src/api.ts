@@ -1,8 +1,8 @@
 import Fastify from "fastify";
-import { collectOffers } from "../index.js";
-import { deduplicateJobs, normalizeOffer } from "../jobs/normalize.js";
-import { writeNormalizedJobsCsv } from "../exporters/jobs-csv.js";
-import { createPool, ensureSchema, queryJobs, upsertJobs, type JobQuery } from "../storage/postgres.js";
+import { collectOffers } from "./index.js";
+import { deduplicateJobs, normalizeOffer } from "./jobs/normalize.js";
+import { writeNormalizedJobsCsv } from "./exporters/jobs-csv.js";
+import { createPool, ensureSchema, queryJobs, upsertJobs, type JobQuery } from "./storage/postgres.js";
 
 type SearchQuery = JobQuery & {
     locationCode?: string;

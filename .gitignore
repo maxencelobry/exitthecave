@@ -25,7 +25,7 @@ exports/
 screenshots/
 playwright-report/
 test-results/
-storage-state/
+data/browser-state/
 *.har
 
 # Coverage and caches

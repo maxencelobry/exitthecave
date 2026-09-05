@@ -30,7 +30,7 @@ Useful routes:
 
 The `jobs.html` page can load the API CSV directly with the “Charger l’API” control. Keep `DATABASE_URL` and all scraper credentials on the backend; never put them in frontend code.
 
-LinkedIn is disabled by default. If enabled, it opens a dedicated local browser profile in `storage-state/linkedin-profile`; sign in manually on the first run. The profile is ignored by Git and is never exported.
+LinkedIn uses a dedicated local browser profile in `data/browser-state/linkedin-profile`. Run `npm run linkedin`, sign in manually in the window that opens on the first run, then rerun the command after the login is complete. The profile is ignored by Git and is never exported.
 
 ## Normalized data
 

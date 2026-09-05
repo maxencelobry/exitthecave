@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright";
-import { searchConfig } from "../../config/search.js";
+import { searchConfig } from "../config.js";
 
 const SEARCH_URL = `https://www.meteojob.com/jobs?where=${encodeURIComponent(searchConfig.location.city)}&sorting=DATE&facetSince=1&distance=${searchConfig.location.radiusKm}`;
 const OFFER_SELECTOR = 'article a[href*="/jobs/"]';

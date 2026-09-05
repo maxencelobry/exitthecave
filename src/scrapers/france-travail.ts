@@ -1,6 +1,6 @@
-import { FranceTravailApiScrapper, type FranceTravailApiOptions } from "./api.js";
-import { FranceTravailBrowserScrapper } from "./browser.js";
-import { searchConfig } from "../../config/search.js";
+import { FranceTravailApiScrapper, type FranceTravailApiOptions } from "./france-travail-api.js";
+import { FranceTravailBrowserScrapper } from "./france-travail-browser.js";
+import { searchConfig } from "../config.js";
 
 type FranceTravailOffer = {
     title: string;

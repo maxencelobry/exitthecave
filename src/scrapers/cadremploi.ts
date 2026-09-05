@@ -1,5 +1,5 @@
 import { connect } from "puppeteer-real-browser";
-import { searchConfig } from "../../config/search.js";
+import { searchConfig } from "../config.js";
 
 const SEARCH_URL = `https://www.cadremploi.fr/emploi/liste_offres?ville=${searchConfig.cadremploi.locationSlug}&rayon=${searchConfig.location.radiusKm}`;
 const OFFER_SELECTOR = 'h2 a[href*="detail_offre?offreId="]';

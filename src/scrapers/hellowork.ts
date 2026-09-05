@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright";
-import { searchConfig } from "../../config/search.js";
+import { searchConfig } from "../config.js";
 
 const SEARCH_URL = `https://www.hellowork.com/fr-fr/emploi/recherche.html?k=&k_autocomplete=&l=${encodeURIComponent(`${searchConfig.location.city} ${searchConfig.location.postalCode}`)}&st=date&msa=0&ray=${searchConfig.location.radiusKm}&d=h`;
 const OFFER_SELECTOR = 'a[href*="/fr-fr/emplois/"][href$=".html"]';
