@@ -8,6 +8,7 @@ const files: Record<string, string> = {
     "/": "public/jobs.html",
     "/jobs.html": "public/jobs.html",
     "/styles.css": "public/styles.css",
+    "/app.js": "public/app.js",
     "/data/config.json": "data/config.json",
     "/data/latest/jobs.csv": "data/latest/jobs.csv",
     "/data/latest/jobs.json": "data/latest/jobs.json",
@@ -16,6 +17,7 @@ const files: Record<string, string> = {
 const contentTypes: Record<string, string> = {
     ".csv": "text/csv; charset=utf-8",
     ".css": "text/css; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
     ".html": "text/html; charset=utf-8",
     ".json": "application/json; charset=utf-8",
 };

@@ -68,7 +68,7 @@
     },
     "interface": {
         "language": "fr",
-        "defaultSort": "newest",
+        "defaultSort": "fit",
         "showDescriptionByDefault": false,
         "showExtraFieldsByDefault": true
     }
