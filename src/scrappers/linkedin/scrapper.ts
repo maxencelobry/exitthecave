@@ -1,7 +1,7 @@
 import { connect } from "puppeteer-real-browser";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const OFFER_SELECTOR = [
     'a.base-card__full-link[href*="/jobs/view/"]',

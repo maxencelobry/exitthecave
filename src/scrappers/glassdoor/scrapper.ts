@@ -1,5 +1,5 @@
 import { connect } from "puppeteer-real-browser";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const SEARCH_URL = `https://www.glassdoor.fr/Emploi/${searchConfig.glassdoor.locationPath}?fromAge=1&sortBy=date_desc&radius=${searchConfig.glassdoor.radiusMiles}`;
 const OFFER_SELECTOR = 'a[href*="/job-listing/"]';

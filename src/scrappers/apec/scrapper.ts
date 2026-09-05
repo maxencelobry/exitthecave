@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const SEARCH_URL = `https://www.apec.fr/candidat/recherche-emploi.html/emploi?lieux=${searchConfig.apec.locationId}&distance=${searchConfig.location.radiusKm}&sortsType=DATE&typesConvention=143684&typesConvention=143685&typesConvention=143686&typesConvention=143687&typesConvention=143706&anciennetePublication=101850`;
 const OFFER_SELECTOR = 'a[href*="/emploi/detail-offre/"]';

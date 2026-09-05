@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const SEARCH_URL = `https://www.jobijoba.com/fr/query/?where=${encodeURIComponent(searchConfig.location.city)}&where_type=city&perimeter=${searchConfig.jobijoba.radiusKm}&period=24_hours`;
 const OFFER_SELECTOR = "a.offer-link";

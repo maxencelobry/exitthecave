@@ -1,5 +1,5 @@
 import { chromium, type Page } from "playwright";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const SEARCH_URL = `https://candidat.francetravail.fr/offres/recherche?emission=1&lieux=${searchConfig.franceTravail.locationCode}&offresPartenaires=true&range=0-19&rayon=${searchConfig.franceTravail.radiusKm}&tri=1`;
 const OFFER_SELECTOR = 'a.media.with-fav[href*="/offres/recherche/detail/"]';

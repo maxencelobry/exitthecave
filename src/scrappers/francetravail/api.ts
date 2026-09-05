@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { searchConfig } from "../config.js";
+import { searchConfig } from "../../config.js";
 
 const TOKEN_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire";
 const API_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search";
