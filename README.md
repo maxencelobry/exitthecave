@@ -25,8 +25,8 @@ Open [http://127.0.0.1:4173](http://127.0.0.1:4173). The viewer reads the latest
 ## Personalise your search
 
 1. Open [`PROMPT.md`](PROMPT.md).
-2. Send the English prompt to ChatGPT together with your CV.
-3. Answer its short questionnaire about your target location, radius, jobs, contracts and exclusions.
+2. Send the prompt to ChatGPT together with your CV.
+3. Answer its questionnaire, or request the quick mode and validate the proposed search universe.
 4. Paste the returned JSON exactly into `data/config.json`.
 5. Start the collector with `npm run build && npm start`.
 
@@ -38,12 +38,14 @@ The browser scraper works without an API account. The optional France Travail AP
 
 The generated configuration uses the public/browser collectors. France Travail's optional API remains disabled until you add your own credentials path manually; never paste credentials into ChatGPT or commit them.
 
-The prompt always requests the same JSON shape. Human-readable values are returned in French so the generated configuration and interface stay consistent.
+The prompt deliberately separates relevance, hard constraints, exclusions and preferences. CV skills expand and rank the search by default; they do not become automatic eligibility barriers. The generated configuration always uses the same JSON shape and French human-readable values.
 
 ## What the viewer provides
 
 - fast text search and filters;
-- newest-first sorting;
+- profile-relevance or newest-first sorting;
+- broad related-offer mode plus stricter compatibility views;
+- transparent role, skill, contract, location and experience subscores;
 - list and compact review modes;
 - visited-offer tracking in the browser;
 - ignored-company filtering;

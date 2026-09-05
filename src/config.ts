@@ -29,6 +29,20 @@ function strings(value: unknown): string[] {
         : [];
 }
 
+function targetRoles(value: unknown): Array<{ name: string; synonyms: string[]; priority: "must_have" | "nice_to_have" }> {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((item) => {
+        const role = object(item);
+        const name = string(role.name);
+        if (!name) return [];
+        return [{
+            name,
+            synonyms: strings(role.synonyms),
+            priority: role.priority === "nice_to_have" ? "nice_to_have" as const : "must_have" as const,
+        }];
+    });
+}
+
 function positiveNumber(value: unknown, fallback: number): number {
     return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 }
@@ -75,6 +89,10 @@ const rawCadremploi = object(rawConfig.cadremploi);
 const rawJobijoba = object(rawConfig.jobijoba);
 const rawLinkedin = object(rawConfig.linkedin);
 const rawProfile = object(rawConfig.profile);
+const rawMustHave = object(rawProfile.mustHave);
+const rawNiceToHave = object(rawProfile.niceToHave);
+const rawExclusions = object(rawProfile.exclusions);
+const rawPreferences = object(rawProfile.preferences);
 const rawInterface = object(rawConfig.interface);
 
 const radiusKm = positiveNumber(rawLocation.radiusKm, 10);
@@ -139,6 +157,7 @@ export const searchConfig = {
     },
     profile: {
         targetTitles: strings(rawProfile.targetTitles),
+        targetRoles: targetRoles(rawProfile.targetRoles),
         keywords: strings(rawProfile.keywords),
         skills: strings(rawProfile.skills),
         languages: strings(rawProfile.languages),
@@ -146,6 +165,32 @@ export const searchConfig = {
         education: strings(rawProfile.education),
         contracts: strings(rawProfile.contracts),
         workPreferences: strings(rawProfile.workPreferences),
+        mustHave: {
+            skills: strings(rawMustHave.skills),
+            contracts: strings(rawMustHave.contracts),
+            languages: strings(rawMustHave.languages),
+            education: strings(rawMustHave.education),
+            experience: strings(rawMustHave.experience),
+        },
+        niceToHave: {
+            skills: strings(rawNiceToHave.skills),
+            software: strings(rawNiceToHave.software),
+            sectors: strings(rawNiceToHave.sectors),
+        },
+        exclusions: {
+            roles: strings(rawExclusions.roles),
+            contracts: strings(rawExclusions.contracts),
+            locations: strings(rawExclusions.locations),
+            companies: strings(rawExclusions.companies),
+        },
+        preferences: {
+            remote: strings(rawPreferences.remote),
+            salaryMinimum: typeof rawPreferences.salaryMinimum === "number" && rawPreferences.salaryMinimum > 0
+                ? rawPreferences.salaryMinimum
+                : null,
+            workTime: strings(rawPreferences.workTime),
+            maximumDistanceKm: positiveNumber(rawPreferences.maximumDistanceKm, radiusKm),
+        },
     },
     interface: {
         language: string(rawInterface.language, "fr"),

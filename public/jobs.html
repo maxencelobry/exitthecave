@@ -3,83 +3,82 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#f6f6f4" />
-        <title>ExitTheCave · recherche d'emploi</title>
+        <meta name="theme-color" content="#f5f5f1" />
+        <title>ExitTheCave · offres locales</title>
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
         <main class="app-shell">
             <header class="topbar">
                 <a class="brand" href="/" aria-label="ExitTheCave accueil">
-                    <span class="brand-mark">E</span>
+                    <span class="brand-mark" aria-hidden="true"><i></i></span>
                     <span>ExitTheCave</span>
                 </a>
-                <div class="top-actions">
-                    <span id="config-state" class="quiet">Configuration locale</span>
+                <div class="top-context">
+                    <span class="live-dot"></span>
+                    <span id="config-state">Configuration locale</span>
                     <a href="https://github.com/maxencelobry/exitthecave" target="_blank" rel="noreferrer">GitHub ↗</a>
                 </div>
             </header>
 
-            <section class="hero">
-                <div>
-                    <p class="eyebrow">TON ESPACE DE RECHERCHE</p>
-                    <h1>Trouve la bonne<br /><em>opportunité.</em></h1>
-                    <p id="search-summary" class="hero-copy">Les offres les plus pertinentes, réunies au même endroit.</p>
-                </div>
-                <div class="hero-note"><span class="pulse"></span> Dernières 24 heures</div>
-            </section>
-
             <section class="search-panel" aria-label="Recherche et filtres">
                 <label class="search-box">
                     <span aria-hidden="true">⌕</span>
-                    <input id="search" type="search" autocomplete="off" placeholder="Métier, compétence, entreprise ou ville" />
+                    <input id="search" type="search" autocomplete="off" placeholder="Métier, entreprise, compétence ou ville" />
                     <kbd>/</kbd>
                 </label>
                 <div class="filters">
+                    <select id="fit-filter" aria-label="Compatibilité minimale">
+                        <option value="related">Tout ce qui est en rapport</option>
+                        <option value="0">Même les offres hors sujet</option>
+                        <option value="strict">Correspondances très fortes</option>
+                        <option value="80">Score 80+</option>
+                        <option value="60">Score 60+</option>
+                    </select>
                     <select id="site" aria-label="Source"><option value="">Toutes les sources</option></select>
                     <select id="contract" aria-label="Contrat"><option value="">Tous les contrats</option></select>
                     <select id="status-filter" aria-label="Suivi">
-                        <option value="all">Tous les statuts</option>
+                        <option value="all">Toutes les offres</option>
                         <option value="unvisited">À découvrir</option>
                         <option value="visited">Déjà ouvertes</option>
                         <option value="applied">Traitées</option>
                     </select>
                     <select id="sort" aria-label="Tri">
-                        <option value="fit">Meilleure compatibilité</option>
+                        <option value="fit">Rapport avec mon profil</option>
                         <option value="newest">Plus récentes</option>
                         <option value="oldest">Plus anciennes</option>
                     </select>
-                    <button id="reset" class="button button-light" type="button">Réinitialiser</button>
-                    <label class="button button-light import-button" for="file">Importer un CSV</label>
-                    <input id="file" class="visually-hidden" type="file" accept=".csv,text/csv" />
+                    <button id="load" class="refresh-button" type="button" aria-label="Actualiser les résultats">↻</button>
                 </div>
                 <details class="advanced">
-                    <summary>Préférences et affichage</summary>
+                    <summary>Plus de réglages</summary>
                     <div class="advanced-grid">
                         <label>Entreprises ignorées<input id="excluded-companies" type="text" placeholder="Ex. IFAE, AXA" /></label>
-                        <label>Compatibilité minimale<select id="fit-filter"><option value="0">Toutes</option><option value="60">60% et plus</option><option value="80">80% et plus</option></select></label>
-                        <label>Colonnes secondaires<select id="detail-mode"><option value="all">Afficher les détails</option><option value="compact">Vue compacte</option></select></label>
+                        <label>Affichage<select id="detail-mode"><option value="all">Détails complets</option><option value="compact">Essentiel uniquement</option></select></label>
+                        <button id="reset" class="button" type="button">Réinitialiser</button>
+                        <label class="button import-button" for="file">Importer un CSV</label>
+                        <input id="file" class="visually-hidden" type="file" accept=".csv,text/csv" />
                     </div>
                 </details>
             </section>
 
-            <section class="overview" aria-label="Résumé des résultats">
-                <div><strong id="visible-count">0</strong><span>offres pertinentes</span></div>
-                <div><strong id="total-count">0</strong><span>offres collectées</span></div>
-                <div><strong id="visited-count">0</strong><span>déjà consultées</span></div>
-                <p id="status" class="quiet">Chargement du dernier résultat…</p>
+            <section class="result-head" aria-label="Résumé des résultats">
+                <div>
+                    <p class="eyebrow">OFFRES · DERNIÈRES 24 HEURES</p>
+                    <h1><strong id="visible-count">0</strong> résultats</h1>
+                    <p id="search-summary">Les offres liées à ton parcours, des plus proches aux plus éloignées.</p>
+                </div>
+                <div class="result-side">
+                    <strong id="profile-summary">Profil en cours de chargement</strong>
+                    <span id="profile-detail">Analyse locale de ton CV</span>
+                    <div class="counts"><span><b id="total-count">0</b> collectées</span><span><b id="visited-count">0</b> ouvertes</span></div>
+                </div>
             </section>
 
-            <section class="profile-strip">
-                <div class="profile-avatar">✦</div>
-                <div><strong id="profile-summary">Profil en cours de chargement</strong><span id="profile-detail">La compatibilité est calculée à partir de ton CV et de ta configuration.</span></div>
-                <button id="load" class="button button-dark" type="button">Actualiser</button>
-            </section>
-
+            <p id="status" class="status-line">Chargement du dernier résultat…</p>
             <section id="results" class="results" aria-live="polite"></section>
-            <nav id="pagination" class="pagination" aria-label="Pages de résultats"></nav>
 
-            <footer><span>ExitTheCave · outil local et gratuit</span><span>Les offres viennent de leurs sites d'origine.</span></footer>
+            <footer><span>ExitTheCave · local et personnel</span><span>Aucun compte, aucune API publique.</span></footer>
         </main>
         <script src="app.js" defer></script>
     </body>

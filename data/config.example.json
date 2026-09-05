@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy this file to data/config.json, then replace the values with the JSON returned by PROMPT.md. The 24-hour publication window is automatic.",
+    "_comment": "Copy this file to data/config.json, then replace the values with the JSON returned by PROMPT.md. Target roles and CV skills rank related offers; only explicit exclusions should remove them. The 24-hour publication window is automatic.",
     "history": {
         "enabled": true,
         "directoryName": "history"
@@ -57,14 +57,37 @@
         "loadDescriptions": false
     },
     "profile": {
-        "targetTitles": [],
-        "keywords": [],
-        "skills": [],
-        "languages": [],
-        "experience": [],
-        "education": [],
-        "contracts": [],
-        "workPreferences": []
+        "targetRoles": [
+            {
+                "name": "Assistant administratif",
+                "synonyms": ["Assistant de gestion", "Employé administratif"],
+                "priority": "nice_to_have"
+            }
+        ],
+        "mustHave": {
+            "skills": [],
+            "contracts": [],
+            "languages": [],
+            "education": [],
+            "experience": []
+        },
+        "niceToHave": {
+            "skills": [],
+            "software": [],
+            "sectors": []
+        },
+        "exclusions": {
+            "roles": [],
+            "contracts": ["Alternance", "Stage"],
+            "locations": [],
+            "companies": []
+        },
+        "preferences": {
+            "remote": [],
+            "salaryMinimum": null,
+            "workTime": [],
+            "maximumDistanceKm": 10
+        }
     },
     "interface": {
         "language": "fr",
