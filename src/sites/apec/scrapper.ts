@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { chromium, type Page } from "playwright";
 import { searchConfig } from "../../config.js";
 
@@ -68,7 +69,8 @@ export class ApecScrapper {
             }
             this.log(`Page ${pageNumber + 1} : ${newResults} nouvelle(s) offre(s), ${results.size} au total`);
 
-            if (newResults === 0 || (expectedCount > 0 && results.size >= expectedCount)) return;
+            if (expectedCount > 0 && results.size >= expectedCount) { reportStop("Nombre d'offres annoncé atteint.", true); return; }
+            if (newResults === 0) { reportStop("Aucune nouvelle offre ; fin non confirmée."); return; }
             const nextUrl = new URL(page.url());
             nextUrl.searchParams.set("page", String(pageNumber + 1));
             await page.goto(nextUrl.toString(), { waitUntil: "domcontentloaded", timeout: 30_000 });
@@ -77,10 +79,13 @@ export class ApecScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[APEC] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[APEC] ${message} : ${detail}`);
     }

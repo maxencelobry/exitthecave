@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop, reportResume } from "../../core/collection.js";
 import { connect } from "puppeteer-real-browser";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -47,6 +48,7 @@ export class LinkedinScrapper {
             let bodyText = await page.evaluate(() => document.body.innerText).catch(() => "");
             let visibleCards = await page.$$eval(CARD_SELECTOR, (cards) => cards.length).catch(() => 0);
             if (page.url().includes("/uas/login") || (visibleCards === 0 && /sign in|se connecter/i.test(bodyText))) {
+                reportError("Connexion LinkedIn requise dans la fenêtre ouverte.");
                 this.log("Connexion manuelle requise : connecte-toi dans la fenêtre LinkedIn ouverte");
                 await page.waitForFunction(() => !window.location.pathname.includes("/uas/login"), {
                     timeout: 120_000,
@@ -59,6 +61,7 @@ export class LinkedinScrapper {
                 await new Promise((resolve) => setTimeout(resolve, 2_000));
                 bodyText = await page.evaluate(() => document.body.innerText).catch(() => "");
                 visibleCards = await page.$$eval(CARD_SELECTOR, (cards) => cards.length).catch(() => 0);
+                if (visibleCards) reportResume();
             }
             this.log(`Page finale : ${page.url()} | titre : ${await page.title().catch(() => "inconnu")}`);
             this.log(`Cartes d'offres visibles : ${visibleCards}`);
@@ -80,8 +83,9 @@ export class LinkedinScrapper {
             for (let pageNumber = 1; pageNumber <= searchConfig.linkedin.maxPages; pageNumber += 1) {
                 const newResults = await this.collectScrollablePage(page, results);
                 this.log(`Page ${pageNumber} : ${newResults} nouvelle(s) offre(s), ${results.size} au total`);
-                if (!newResults || pageNumber === searchConfig.linkedin.maxPages) break;
-                const clickedNext = await this.openNextPage(page, pageNumber + 1);
+                if (!newResults) { reportStop("Aucune nouvelle offre ; fin non confirmée."); break; }
+                if (pageNumber === searchConfig.linkedin.maxPages) { reportStop(`Limite de sécurité de ${pageNumber} pages atteinte.`); break; }
+                const clickedNext = await this.openNextPage(page, pageNumber + 1, [...results.keys()]);
                 if (!clickedNext) break;
                 await new Promise((resolve) => setTimeout(resolve, 2_000));
             }
@@ -136,12 +140,14 @@ export class LinkedinScrapper {
                 const maximum = container.scrollHeight - container.clientHeight;
                 container.scrollTop = Math.min(maximum, before + Math.max(300, container.clientHeight * 0.72));
                 return { moved: container.scrollTop > before + 1, atEnd: container.scrollTop >= maximum - 2 };
-            }, CARD_SELECTOR).catch(() => ({ moved: false, atEnd: true }));
+            }, CARD_SELECTOR);
 
-            if ((!scroll.moved && scroll.atEnd) || (scroll.atEnd && stagnantPasses >= 2) || stagnantPasses >= 5) break;
+            if (scroll.atEnd && stagnantPasses >= 3) return results.size - initialSize;
+            if (stagnantPasses >= 5) { reportStop("Défilement bloqué avant la fin de la liste."); return results.size - initialSize; }
             await new Promise((resolve) => setTimeout(resolve, 450));
         }
 
+        reportStop("Limite de défilement atteinte ; page potentiellement incomplète.");
         return results.size - initialSize;
     }
 
@@ -169,27 +175,36 @@ export class LinkedinScrapper {
                     publishedAt,
                 };
             }),
-        ).catch(() => []);
+        );
     }
 
-    private async openNextPage(page: LinkedinPage, nextPageNumber: number): Promise<boolean> {
-        const currentIds = new Set(await page.$$eval(CARD_SELECTOR, (cards) =>
+    private async openNextPage(page: LinkedinPage, nextPageNumber: number, knownUrls: string[] = []): Promise<boolean> {
+        const currentIds = new Set(knownUrls.length ? knownUrls.map((url) => `job-card-component-ref-${url.match(/\/jobs\/view\/(\d+)/)?.[1] ?? ""}`) : await page.$$eval(CARD_SELECTOR, (cards) =>
             cards.flatMap((card) => {
                 const id = card.getAttribute("componentkey");
                 return id ? [id] : [];
             }),
         ).catch((): string[] => []));
-        const nextUrl = new URL(page.url());
-        nextUrl.searchParams.delete("currentJobId");
-        nextUrl.searchParams.set("start", String((nextPageNumber - 1) * 25));
-
         try {
-            await page.goto(nextUrl.toString(), { waitUntil: "domcontentloaded", timeout: 30_000 });
-            await new Promise((resolve) => setTimeout(resolve, 1_500));
-            const nextIds = await page.$$eval(CARD_SELECTOR, (cards) =>
-                cards.map((card) => card.getAttribute("componentkey")).filter(Boolean),
-            );
-            return nextIds.some((id) => id && !currentIds.has(id));
+            const navigation = await page.evaluate((number) => {
+                const controls = [...document.querySelectorAll<HTMLElement>('button, a, [role="button"]')]
+                    .filter((element) => element.getClientRects().length > 0);
+                const label = (element: HTMLElement) => (element.getAttribute("aria-label") || element.innerText).replace(/\s+/g, " ").trim();
+                const next = controls.find((element) => /^(?:suivant|next)(?:\s|$)|page suivante|next page/i.test(label(element)));
+                const numbered = controls.find((element) => new RegExp(`^(?:(?:aller [àa] la )?page |go to page )?${number}$`, "i").test(label(element)));
+                const control = next ?? numbered;
+                if (!control) return "missing";
+                if (control.matches(":disabled") || control.getAttribute("aria-disabled") === "true") return "end";
+                control.click();
+                return "clicked";
+            }, nextPageNumber);
+            if (navigation === "end") { reportStop("Dernière page LinkedIn confirmée : suivant désactivé.", true); return false; }
+            if (navigation === "missing") { reportStop("Navigation suivante introuvable ; fin LinkedIn non confirmée."); return false; }
+            await page.waitForFunction((selector, previous) => {
+                const cards = [...document.querySelectorAll(selector)];
+                return cards.some((card) => !previous.includes(card.getAttribute("componentkey") ?? ""));
+            }, { timeout: 15_000 }, CARD_SELECTOR, [...currentIds]);
+            return true;
         } catch (error) {
             this.logError(`Impossible d'ouvrir la page ${nextPageNumber}`, error);
             return false;
@@ -230,10 +245,13 @@ export class LinkedinScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[LinkedIn] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[LinkedIn] ${message} : ${detail}`);
     }

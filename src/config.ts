@@ -43,6 +43,18 @@ function targetRoles(value: unknown): Array<{ name: string; synonyms: string[]; 
     });
 }
 
+function weightedKeywords(value: unknown): Array<{ term: string; weight: number }> {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((item) => {
+        const keyword = object(item);
+        const term = string(keyword.term);
+        const weight = typeof keyword.weight === "number" && Number.isFinite(keyword.weight) && keyword.weight > 0
+            ? keyword.weight
+            : 0;
+        return term && weight ? [{ term, weight }] : [];
+    });
+}
+
 function positiveNumber(value: unknown, fallback: number): number {
     return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 }
@@ -156,6 +168,11 @@ export const searchConfig = {
         loadDescriptions: boolean(rawLinkedin.loadDescriptions, false),
     },
     profile: {
+        contractScoring: {
+            preferred: rawProfile.contractScoring ? strings(object(rawProfile.contractScoring).preferred) : ["CDI", "CDD"],
+            avoided: rawProfile.contractScoring ? strings(object(rawProfile.contractScoring).avoided) : ["Alternance", "Apprentissage", "Stage"],
+        },
+        weightedKeywords: weightedKeywords(rawProfile.weightedKeywords),
         targetTitles: strings(rawProfile.targetTitles),
         targetRoles: targetRoles(rawProfile.targetRoles),
         keywords: strings(rawProfile.keywords),

@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { readFile } from "node:fs/promises";
 import { searchConfig } from "../../config.js";
 
@@ -92,7 +93,12 @@ export class FranceTravailApiScrapper {
                 }
                 results.push(...batch.map((offer) => this.mapOffer(offer)).filter((offer) => offer.title && offer.url));
                 this.log(`API ${start + 1}-${start + batch.length} : ${results.length} offre(s)`);
-                if (batch.length < PAGE_SIZE || (total > 0 && results.length >= total)) break;
+                reportProgress(Math.floor(start / PAGE_SIZE) + 1, results.length);
+                if (batch.length < PAGE_SIZE || (total > 0 && results.length >= total)) {
+                    reportStop("Fin des résultats API atteinte.", true);
+                    break;
+                }
+                if (start + PAGE_SIZE >= limit) reportStop("Limite de résultats API atteinte.");
             }
 
             this.log(`${results.length} offre(s) trouvée(s) via API`);
@@ -164,10 +170,13 @@ export class FranceTravailApiScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[France Travail API] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[France Travail API] ${message} : ${detail}`);
     }

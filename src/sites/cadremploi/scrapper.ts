@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { connect } from "puppeteer-real-browser";
 import { searchConfig } from "../../config.js";
 
@@ -93,7 +94,9 @@ export class CadremploiScrapper {
                 (buttons, nextPage) => buttons.some((button) => button.textContent?.trim() === String(nextPage)),
                 pageNumber + 1,
             );
-            if (!hasNext || newResults === 0 || (expectedCount > 0 && results.size >= expectedCount)) return;
+            if (expectedCount > 0 && results.size >= expectedCount) { reportStop("Nombre d'offres annoncé atteint.", true); return; }
+            if (newResults === 0) { reportStop("Aucune nouvelle offre ; fin non confirmée."); return; }
+            if (!hasNext) { reportStop("Dernière page disponible atteinte.", true); return; }
             const nextUrl = new URL(page.url());
             nextUrl.searchParams.set("page", String(pageNumber + 1));
             await page.goto(nextUrl.toString(), { waitUntil: "domcontentloaded", timeout: 30_000 });
@@ -105,10 +108,13 @@ export class CadremploiScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[Cadremploi] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[Cadremploi] ${message} : ${detail}`);
     }

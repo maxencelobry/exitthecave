@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy this file to data/config.json, then replace the values with the JSON returned by PROMPT.md. Target roles and CV skills rank related offers; only explicit exclusions should remove them. The 24-hour publication window is automatic.",
+    "_comment": "Copy this file to data/config.json, then replace the values with the JSON returned by PROMPT.md. weightedKeywords drives the simple CV score. The 24-hour publication window is automatic.",
     "history": {
         "enabled": true,
         "directoryName": "history"
@@ -57,6 +57,17 @@
         "loadDescriptions": false
     },
     "profile": {
+        "contractScoring": {
+            "preferred": ["CDI", "CDD"],
+            "avoided": ["Alternance", "Stage"]
+        },
+        "weightedKeywords": [
+            { "term": "assistant administratif", "weight": 10 },
+            { "term": "gestion de dossiers", "weight": 8 },
+            { "term": "accueil", "weight": 7 },
+            { "term": "Excel", "weight": 5 },
+            { "term": "organisation", "weight": 4 }
+        ],
         "targetRoles": [
             {
                 "name": "Assistant administratif",
@@ -72,9 +83,9 @@
             "experience": []
         },
         "niceToHave": {
-            "skills": [],
-            "software": [],
-            "sectors": []
+            "skills": ["gestion de dossiers", "saisie de données", "accueil"],
+            "software": ["Excel", "Outlook"],
+            "sectors": ["administration"]
         },
         "exclusions": {
             "roles": [],
@@ -93,6 +104,6 @@
         "language": "fr",
         "defaultSort": "fit",
         "showDescriptionByDefault": false,
-        "showExtraFieldsByDefault": true
+        "showExtraFieldsByDefault": false
     }
 }

@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { chromium, type Page } from "playwright";
 import { searchConfig } from "../../config.js";
 
@@ -139,18 +140,21 @@ export class FranceTravailBrowserScrapper {
             }
             this.log(`Page ${pageNumber} : ${newResults} nouvelle(s) offre(s), ${results.size} au total`);
             if (newResults === 0) {
+                reportStop("Aucune nouvelle offre ; fin non confirmée.");
                 this.log("Pagination arrêtée : aucune nouvelle offre détectée");
                 return;
             }
 
             const next = page.locator('a[href*="afficherplusderesultats"]').last();
             if ((await next.count()) === 0) {
+                reportStop("Dernière page disponible atteinte.", true);
                 this.log("Fin de la pagination");
                 return;
             }
 
             const nextHref = await next.getAttribute("href");
             if (!nextHref || visitedNextLinks.has(nextHref)) {
+                reportStop("Lien suivant absent ou déjà parcouru ; fin non confirmée.");
                 this.log("Pagination arrêtée : lien suivant absent ou déjà parcouru");
                 return;
             }
@@ -194,10 +198,13 @@ export class FranceTravailBrowserScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[France Travail] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[France Travail] ${message} : ${detail}`);
     }

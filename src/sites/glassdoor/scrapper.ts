@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { connect } from "puppeteer-real-browser";
 import { searchConfig } from "../../config.js";
 
@@ -87,7 +88,8 @@ export class GlassdoorScrapper {
                 (button as HTMLButtonElement).click();
                 return true;
             });
-            if (!clicked || newResults === 0) return;
+            if (newResults === 0) { reportStop("Aucune nouvelle offre ; fin non confirmée."); return; }
+            if (!clicked) { reportStop("Bouton suivant absent ou inaccessible ; fin non confirmée."); return; }
 
             for (let attempt = 0; attempt < 30; attempt += 1) {
                 await new Promise((resolve) => setTimeout(resolve, 500));
@@ -123,10 +125,13 @@ export class GlassdoorScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[Glassdoor] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[Glassdoor] ${message} : ${detail}`);
     }

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, rename } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ApecScrapper } from "./sites/apec/scrapper.js";
@@ -16,19 +16,36 @@ import { searchConfig } from "./config.js";
 import { archiveCsv, filterSeenOffers, loadSeenUrls } from "./core/history.js";
 import type { RawOffer } from "./core/job.js";
 import type { FranceTravailApiOptions } from "./sites/francetravail/api.js";
+import { runSource, type SourceReport } from "./core/collection.js";
 
 export async function collectOffers(options: FranceTravailApiOptions = {}): Promise<RawOffer[]> {
     const enabled = searchConfig.scrapers.enabled;
+    const reportPath = join(process.cwd(), "data", "latest", "collection.json");
+    await mkdir(join(process.cwd(), "data", "latest"), { recursive: true });
+    const sources: Record<string, SourceReport> = Object.fromEntries(Object.entries(enabled).map(([name, active]) =>
+        [name, { state: active ? "running" : "disabled", reason: active ? "Collecte en cours" : "Source désactivée", pages: 0, collected: 0 }]));
+    const collection = { startedAt: new Date().toISOString(), finishedAt: null as string | null, pid: process.pid, state: "running", sources };
+    let pending = Promise.resolve();
+    const changed = () => {
+        const snapshot = JSON.stringify(collection, null, 2);
+        pending = pending.then(async () => {
+            await writeFile(`${reportPath}.tmp`, snapshot, "utf8");
+            await rename(`${reportPath}.tmp`, reportPath);
+        }).catch((error) => console.error("[Diagnostic]", error));
+    };
+    changed();
+    const collect = <T>(name: string, work: () => Promise<T[]>) => enabled[name]
+        ? runSource(sources[name]!, changed, work) : Promise.resolve([] as T[]);
     const [franceTravail, meteojob, hellowork, glassdoor, cadremploi, apec, jobijoba, linkedin] =
         await Promise.all([
-            enabled.franceTravail ? new FranceTravailScrapper().scrap(options) : Promise.resolve([]),
-            enabled.meteojob ? new MeteojobScrapper().scrap() : Promise.resolve([]),
-            enabled.hellowork ? new HelloworkScrapper().scrap() : Promise.resolve([]),
-            enabled.glassdoor ? new GlassdoorScrapper().scrap() : Promise.resolve([]),
-            enabled.cadremploi ? new CadremploiScrapper().scrap() : Promise.resolve([]),
-            enabled.apec ? new ApecScrapper().scrap() : Promise.resolve([]),
-            enabled.jobijoba ? new JobijobaScrapper().scrap() : Promise.resolve([]),
-            enabled.linkedin ? new LinkedinScrapper().scrap() : Promise.resolve([]),
+            collect("franceTravail", () => new FranceTravailScrapper().scrap(options)),
+            collect("meteojob", () => new MeteojobScrapper().scrap()),
+            collect("hellowork", () => new HelloworkScrapper().scrap()),
+            collect("glassdoor", () => new GlassdoorScrapper().scrap()),
+            collect("cadremploi", () => new CadremploiScrapper().scrap()),
+            collect("apec", () => new ApecScrapper().scrap()),
+            collect("jobijoba", () => new JobijobaScrapper().scrap()),
+            collect("linkedin", () => new LinkedinScrapper().scrap()),
         ]);
 
     const results = {
@@ -72,6 +89,7 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
     const freshStats = Object.fromEntries(
         Object.entries(freshResults).map(([site, offers]) => [site, { offers: offers.length }]),
     );
+    for (const [site, stats] of Object.entries(freshStats)) sources[site]!.newOffers = stats.offers;
     await writeFile(
         outputPath,
         writeJson({ generatedAt: new Date().toISOString(), stats: freshStats, results: freshResults }),
@@ -87,6 +105,10 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
         console.log(`[Stats] ${site} : ${siteStats.offers} offre(s)`);
     if (searchConfig.history.enabled) console.log(`[History] ${skippedOffers} offre(s) déjà connue(s) ignorée(s)`);
     if (archivePath) console.log(`[History] Archive CSV sauvegardée : ${archivePath}`);
+    collection.finishedAt = new Date().toISOString();
+    collection.state = Object.values(sources).some((source) => !["completed", "disabled"].includes(source.state)) ? "partial" : "completed";
+    changed();
+    await pending;
     console.log(`[Stats] JSON sauvegardé : ${outputPath}`);
     console.log(`[Stats] CSV sauvegardé : ${csvOutputPath} (${csvOffers.length} ligne(s))`);
 

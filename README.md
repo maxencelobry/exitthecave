@@ -38,19 +38,25 @@ The browser scraper works without an API account. The optional France Travail AP
 
 The generated configuration uses the public/browser collectors. France Travail's optional API remains disabled until you add your own credentials path manually; never paste credentials into ChatGPT or commit them.
 
-The prompt deliberately separates relevance, hard constraints, exclusions and preferences. CV skills expand and rank the search by default; they do not become automatic eligibility barriers. The generated configuration always uses the same JSON shape and French human-readable values.
+The prompt creates a weighted keyword list from the CV. Ranking stays intentionally simple: matching weights are added, title matches receive a stronger bonus, and contract bonuses or penalties adjust the result. The generated configuration always uses the same JSON shape and French human-readable values.
 
 ## What the viewer provides
 
 - fast text search and filters;
 - profile-relevance or newest-first sorting;
-- broad related-offer mode plus stricter compatibility views;
-- transparent role, skill, contract, location and experience subscores;
+- weighted CV score filters;
+- title-first matching with clear contract bonuses and penalties;
 - list and compact review modes;
 - visited-offer tracking in the browser;
 - ignored-company filtering;
 - local CSV loading, with a manual file picker fallback;
 - a direct link back to this repository.
+
+The viewer separates **Reload results** (read the saved files again) from **Start collection** (launch the configured collectors; LinkedIn may open a sign-in window). It shows the collection date and each source's status, page count, recovered offers, new offers and stop reason. Older files without diagnostics are shown as unknown. A completed source means an observed end of its available navigation, not a guarantee that the website exposes every job.
+
+Each offer has expandable details and separate opened, review-later and application-sent states. Legacy “processed” states are retained separately. Ignored companies persist in the browser and are not cleared by resetting search filters.
+
+`profile.contractScoring.preferred` adds 8 raw points and `avoided` subtracts 35, once each before score conversion. Empty arrays disable those adjustments. `profile.exclusions.roles`, `contracts` and `locations` filter the viewer, including imported CSVs. Company exclusions initialise the editable ignored-company list. `mustHave`, `preferences` and role priorities are documentary; they do not enforce eligibility or automatically score salary, remote work or distance. `targetRoles` and `niceToHave` only generate fallback keywords when `weightedKeywords` is empty.
 
 The generated files are kept locally in `data/latest/`. Example files only are committed to GitHub; personal results, browser sessions and history are ignored.
 

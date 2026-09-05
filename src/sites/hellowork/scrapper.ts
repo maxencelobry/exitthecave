@@ -1,3 +1,4 @@
+import { reportError, reportProgress, reportStop } from "../../core/collection.js";
 import { chromium, type Page } from "playwright";
 import { searchConfig } from "../../config.js";
 
@@ -109,7 +110,8 @@ export class HelloworkScrapper {
                 name: String(pageNumber + 1),
                 exact: true,
             });
-            if ((await next.count()) === 0 || newResults === 0) return;
+            if (newResults === 0) { reportStop("Aucune nouvelle offre ; fin non confirmée."); return; }
+            if ((await next.count()) === 0) { reportStop("Dernière page disponible atteinte.", true); return; }
             const nextUrl = new URL(page.url());
             nextUrl.searchParams.set("p", String(pageNumber + 1));
             await page.goto(nextUrl.toString(), {
@@ -122,10 +124,13 @@ export class HelloworkScrapper {
     }
 
     private log(message: string): void {
+        const progress = message.match(/^Page (\d+) : .*?, (\d+) au total/);
+        if (progress) reportProgress(Number(progress[1]), Number(progress[2]));
         console.log(`[HelloWork] ${message}`);
     }
 
     private logError(message: string, error: unknown): void {
+        reportError(message);
         const detail = error instanceof Error ? error.message : String(error);
         console.error(`[HelloWork] ${message} : ${detail}`);
     }

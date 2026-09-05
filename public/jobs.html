@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#f5f5f1" />
-        <title>ExitTheCave · offres locales</title>
+        <meta name="theme-color" content="#ffffff" />
+        <title>ExitTheCave · offres</title>
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
-        <main class="app-shell">
+        <main class="shell">
             <header class="topbar">
                 <a class="brand" href="/" aria-label="ExitTheCave accueil">
                     <span class="brand-mark" aria-hidden="true"><i></i></span>
@@ -21,65 +21,111 @@
                 </div>
             </header>
 
-            <section class="search-panel" aria-label="Recherche et filtres">
-                <label class="search-box">
-                    <span aria-hidden="true">⌕</span>
-                    <input id="search" type="search" autocomplete="off" placeholder="Métier, entreprise, compétence ou ville" />
-                    <kbd>/</kbd>
+            <section class="dashboard" aria-label="Statistiques">
+                <div><span>Affichées</span><strong id="visible-count">0</strong></div>
+                <div><span>Collectées</span><strong id="total-count">0</strong></div>
+                <div><span>Ouvertes</span><strong id="visited-count">0</strong></div>
+            </section>
+
+            <details class="profile">
+                <summary id="profile-summary">Profil CV actif</summary>
+                <p id="profile-detail">Chargement des mots-clés pondérés…</p>
+            </details>
+
+            <section class="toolbar" aria-label="Recherche et filtres">
+                <label class="search-field">
+                    <span>Recherche</span>
+                    <input id="search" type="search" autocomplete="off" placeholder="Poste, ville, entreprise…" />
                 </label>
-                <div class="filters">
-                    <select id="fit-filter" aria-label="Compatibilité minimale">
-                        <option value="related">Tout ce qui est en rapport</option>
-                        <option value="0">Même les offres hors sujet</option>
-                        <option value="strict">Correspondances très fortes</option>
-                        <option value="80">Score 80+</option>
-                        <option value="60">Score 60+</option>
-                    </select>
-                    <select id="site" aria-label="Source"><option value="">Toutes les sources</option></select>
-                    <select id="contract" aria-label="Contrat"><option value="">Tous les contrats</option></select>
+                <label>
+                    <span>Source</span>
+                    <select id="site" aria-label="Source"><option value="">Toutes</option></select>
+                </label>
+                <label>
+                    <span>Contrat</span>
+                    <select id="contract" aria-label="Contrat"><option value="">Tous</option></select>
+                </label>
+                <label>
+                    <span>Suivi</span>
                     <select id="status-filter" aria-label="Suivi">
-                        <option value="all">Toutes les offres</option>
-                        <option value="unvisited">À découvrir</option>
-                        <option value="visited">Déjà ouvertes</option>
-                        <option value="applied">Traitées</option>
+                        <option value="all">Toutes</option>
+                        <option value="unvisited">Non ouvertes</option>
+                        <option value="visited">Ouvertes</option>
+                        <option value="review">À revoir</option>
+                        <option value="sent">Candidature envoyée</option>
+                        <option value="applied">Traitées (ancien suivi)</option>
                     </select>
+                </label>
+                <label>
+                    <span>Score</span>
+                    <select id="fit-filter" aria-label="Score minimal">
+                        <option value="0">Tous les scores</option>
+                        <option value="80">80 % et plus</option>
+                        <option value="60">60 % et plus</option>
+                        <option value="40">40 % et plus</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Ordre</span>
                     <select id="sort" aria-label="Tri">
-                        <option value="fit">Rapport avec mon profil</option>
+                        <option value="fit">Meilleur score</option>
                         <option value="newest">Plus récentes</option>
                         <option value="oldest">Plus anciennes</option>
                     </select>
-                    <button id="load" class="refresh-button" type="button" aria-label="Actualiser les résultats">↻</button>
+                </label>
+                <div class="collection-actions">
+                    <button id="load" type="button">Recharger les résultats</button>
+                    <button id="collect" type="button">Lancer une collecte</button>
                 </div>
-                <details class="advanced">
-                    <summary>Plus de réglages</summary>
-                    <div class="advanced-grid">
-                        <label>Entreprises ignorées<input id="excluded-companies" type="text" placeholder="Ex. IFAE, AXA" /></label>
-                        <label>Affichage<select id="detail-mode"><option value="all">Détails complets</option><option value="compact">Essentiel uniquement</option></select></label>
-                        <button id="reset" class="button" type="button">Réinitialiser</button>
-                        <label class="button import-button" for="file">Importer un CSV</label>
+                <details class="settings">
+                    <summary>Options</summary>
+                    <div>
+                        <label>Entreprises ignorées<input id="excluded-companies" type="text" placeholder="IFAE, AXA…" /></label>
+                        <label>Contenu<select id="detail-mode"><option value="compact">Essentiel</option><option value="all">Tout afficher</option></select></label>
+                        <button id="reset" class="secondary" type="button">Effacer les filtres de recherche</button>
+                        <label class="file-label" for="file">Importer CSV</label>
                         <input id="file" class="visually-hidden" type="file" accept=".csv,text/csv" />
                     </div>
                 </details>
             </section>
 
-            <section class="result-head" aria-label="Résumé des résultats">
-                <div>
-                    <p class="eyebrow">OFFRES · DERNIÈRES 24 HEURES</p>
-                    <h1><strong id="visible-count">0</strong> résultats</h1>
-                    <p id="search-summary">Les offres liées à ton parcours, des plus proches aux plus éloignées.</p>
-                </div>
-                <div class="result-side">
-                    <strong id="profile-summary">Profil en cours de chargement</strong>
-                    <span id="profile-detail">Analyse locale de ton CV</span>
-                    <div class="counts"><span><b id="total-count">0</b> collectées</span><span><b id="visited-count">0</b> ouvertes</span></div>
+            <details class="collection-report">
+                <summary id="collection-summary">État des sources</summary>
+                <p>« Terminée » indique la fin observée du parcours. « Partielle » signale un arrêt sans confirmation. Les nouvelles offres excluent celles déjà collectées.</p>
+                <ul id="collection-sources"></ul>
+            </details>
+            <div class="status-row">
+                <span id="status">Chargement des offres…</span>
+                <span id="collection-date">Date de collecte non disponible</span>
+            </div>
+
+            <section class="table-card" aria-label="Offres">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Score</th>
+                                <th>Offre</th>
+                                <th>Entreprise</th>
+                                <th>Lieu</th>
+                                <th>Contrat</th>
+                                <th>Date</th>
+                                <th>Suivi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results"></tbody>
+                    </table>
                 </div>
             </section>
 
-            <p id="status" class="status-line">Chargement du dernier résultat…</p>
-            <section id="results" class="results" aria-live="polite"></section>
-
-            <footer><span>ExitTheCave · local et personnel</span><span>Aucun compte, aucune API publique.</span></footer>
+            <footer><span>ExitTheCave · local</span><span>Offres des dernières 24 heures</span></footer>
         </main>
+
+        <aside id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <span id="feedback-icon" class="feedback-icon" aria-hidden="true">✓</span>
+            <strong id="feedback-text"></strong>
+            <button id="feedback-close" type="button" aria-label="Fermer">×</button>
+        </aside>
         <script src="app.js" defer></script>
     </body>
 </html>
