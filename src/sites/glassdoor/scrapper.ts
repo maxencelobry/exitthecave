@@ -7,7 +7,7 @@ const OFFER_SELECTOR = 'a[href*="/job-listing/"]';
 export interface GlassdoorResult {
     title: string;
     url: string;
-    extra: { visibleInfo: string[] };
+    extra: { description: string | null; visibleInfo: string[] };
 }
 
 export class GlassdoorScrapper {
@@ -51,9 +51,14 @@ export class GlassdoorScrapper {
             const entries = await page.$$eval(OFFER_SELECTOR, (links) =>
                 links.map((link) => {
                     const card = link.closest("li") ?? link.parentElement;
+                    const description =
+                        [...(card?.querySelectorAll("[class*='description'], [class*='summary'], p") ?? [])]
+                            .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+                            .find((value) => value.length >= 80) ?? null;
                     return {
                         href: (link as HTMLAnchorElement).href,
                         title: link.textContent?.replace(/\s+/g, " ").trim() ?? "",
+                        description,
                         visibleInfo: (card?.textContent ?? link.textContent ?? "")
                             .split(/\n+/)
                             .map((value) => value.replace(/\s+/g, " ").trim())
@@ -67,7 +72,7 @@ export class GlassdoorScrapper {
                 results.set(entry.href, {
                     title: entry.title,
                     url: entry.href,
-                    extra: { visibleInfo: entry.visibleInfo },
+                    extra: { description: entry.description, visibleInfo: entry.visibleInfo },
                 });
                 newResults += 1;
             }

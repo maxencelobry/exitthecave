@@ -13,6 +13,7 @@ export interface MeteojobResult {
         contract: string | null;
         salary: string | null;
         publishedAt: string | null;
+        description: string | null;
         visibleInfo: string[];
     };
 }
@@ -79,6 +80,10 @@ export class MeteojobScrapper {
                     const contract = text('[id$="-contract-types"]');
                     const salary = text('[id$="-salary"]');
                     const publishedAt = text(".cc-font-size-small");
+                    const description =
+                        [...article.querySelectorAll("[class*='description'], [class*='summary'], p")]
+                            .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+                            .find((value) => value.length >= 80 && value !== title) ?? null;
                     const visibleInfo = [location, contract, salary, publishedAt].filter(Boolean);
 
                     return {
@@ -89,6 +94,7 @@ export class MeteojobScrapper {
                         contract: contract || null,
                         salary: salary || null,
                         publishedAt: publishedAt || null,
+                        description,
                         visibleInfo,
                     };
                 }),
@@ -106,6 +112,7 @@ export class MeteojobScrapper {
                         contract: entry.contract,
                         salary: entry.salary,
                         publishedAt: entry.publishedAt,
+                        description: entry.description,
                         visibleInfo: entry.visibleInfo,
                     },
                 });

@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+package-lock.json
 
 # Build output
 dist/
@@ -8,7 +9,6 @@ dist/
 # Environment files and secrets
 .env
 .env.*
-!.env.example
 
 # Logs and runtime files
 *.log

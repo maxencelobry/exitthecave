@@ -7,7 +7,7 @@ const OFFER_SELECTOR = 'a[href*="/emploi/detail-offre/"]';
 export interface ApecResult {
     title: string;
     url: string;
-    extra: { visibleInfo: string[] };
+    extra: { description: string | null; visibleInfo: string[] };
 }
 
 export class ApecScrapper {
@@ -45,6 +45,10 @@ export class ApecScrapper {
                 links.map((link) => ({
                     href: (link as HTMLAnchorElement).href,
                     title: link.querySelector("h2")?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+                    description:
+                        [...link.querySelectorAll("[class*='description'], [class*='summary'], [class*='mission'], p")]
+                            .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+                            .find((value) => value.length >= 80) ?? null,
                     visibleInfo: (link.textContent ?? "")
                         .split(/\n+/)
                         .map((value) => value.replace(/\s+/g, " ").trim())
@@ -58,7 +62,7 @@ export class ApecScrapper {
                 results.set(entry.href, {
                     title: entry.title,
                     url: entry.href,
-                    extra: { visibleInfo: entry.visibleInfo },
+                    extra: { description: entry.description, visibleInfo: entry.visibleInfo },
                 });
                 newResults += 1;
             }

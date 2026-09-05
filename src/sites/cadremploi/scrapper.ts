@@ -7,7 +7,7 @@ const OFFER_SELECTOR = 'h2 a[href*="detail_offre?offreId="]';
 export interface CadremploiResult {
     title: string;
     url: string;
-    extra: { visibleInfo: string[] };
+    extra: { description: string | null; visibleInfo: string[] };
 }
 
 export class CadremploiScrapper {
@@ -63,9 +63,14 @@ export class CadremploiScrapper {
                         .split(/\n+/)
                         .map((value) => value.replace(/\s+/g, " ").trim())
                         .filter(Boolean);
+                    const description =
+                        [...(card?.querySelectorAll("[class*='description'], [class*='summary'], p") ?? [])]
+                            .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+                            .find((value) => value.length >= 80) ?? null;
                     return {
                         href: (link as HTMLAnchorElement).href,
                         title: link.textContent?.replace(/\s+/g, " ").trim() ?? "",
+                        description,
                         visibleInfo,
                     };
                 }),
@@ -77,7 +82,7 @@ export class CadremploiScrapper {
                 results.set(entry.href, {
                     title: entry.title,
                     url: entry.href,
-                    extra: { visibleInfo: entry.visibleInfo },
+                    extra: { description: entry.description, visibleInfo: entry.visibleInfo },
                 });
                 newResults += 1;
             }

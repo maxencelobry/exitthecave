@@ -53,12 +53,11 @@ export interface FranceTravailApiResult {
 export class FranceTravailApiScrapper {
     async scrap(options: FranceTravailApiOptions = {}): Promise<FranceTravailApiResult[]> {
         try {
-            process.loadEnvFile?.();
             const credentials = await this.loadCredentials();
             if (!credentials) {
                 this.logError(
                     "Identifiants API absents",
-                    "Configure FRANCE_TRAVAIL_CLIENT_ID/SECRET ou FRANCE_TRAVAIL_CREDENTIALS_FILE",
+                        "Configure franceTravail.credentialsFile dans src/config.ts",
                 );
                 return [];
             }
@@ -105,10 +104,7 @@ export class FranceTravailApiScrapper {
     }
 
     private async loadCredentials(): Promise<{ clientId: string; clientSecret: string } | null> {
-        const clientId = process.env.FRANCE_TRAVAIL_CLIENT_ID;
-        const clientSecret = process.env.FRANCE_TRAVAIL_CLIENT_SECRET;
-        if (clientId && clientSecret) return { clientId, clientSecret };
-        const filePath = process.env.FRANCE_TRAVAIL_CREDENTIALS_FILE;
+        const filePath = searchConfig.franceTravail.credentialsFile;
         if (!filePath) return null;
 
         const credentials = JSON.parse(await readFile(filePath, "utf8")) as Credentials;

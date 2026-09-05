@@ -27,6 +27,7 @@ export interface LinkedinResult {
         company: string | null;
         location: string | null;
         publishedAt: string | null;
+        description: string | null;
         visibleInfo: string[];
     };
 }
@@ -118,6 +119,9 @@ export class LinkedinScrapper {
                 let newResults = 0;
                 for (const entry of entries) {
                     if (!entry.href || !entry.title || results.has(entry.href)) continue;
+                    const description = searchConfig.linkedin.loadDescriptions
+                        ? await this.loadVisibleDescription(page, entry.href)
+                        : null;
                     results.set(entry.href, {
                         title: entry.title,
                         url: entry.href,
@@ -125,6 +129,7 @@ export class LinkedinScrapper {
                             company: entry.company || null,
                             location: entry.location || null,
                             publishedAt: entry.publishedAt || null,
+                            description,
                             visibleInfo: [entry.company, entry.location, entry.publishedAt].filter(Boolean),
                         },
                     });
@@ -160,6 +165,39 @@ export class LinkedinScrapper {
         } finally {
             await browser?.close().catch((error) => this.logError("Fermeture du navigateur impossible", error));
         }
+    }
+
+    private async loadVisibleDescription(
+        page: Awaited<ReturnType<typeof connect>>["page"],
+        url: string,
+    ): Promise<string | null> {
+        const jobId = url.match(/\/jobs\/view\/(\d+)/)?.[1];
+        if (!jobId) return null;
+        const card = await page.$(`[componentkey="job-card-component-ref-${jobId}"]`);
+        if (!card) return null;
+
+        await card.click().catch(() => undefined);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        const description = await page
+            .evaluate(() => {
+                const candidates = [
+                    ...document.querySelectorAll<HTMLElement>(
+                        ".jobs-description__content, .jobs-description-content__text, .jobs-box__html-content, [data-testid='expandable-text-box'], [id^='JobDetails_AboutTheJob_'], [class*='description'], [class*='markup']",
+                    ),
+                ]
+                    .map((element) =>
+                        element.innerText
+                            .replace(/^À propos de l’offre d’emploi\s*/i, "")
+                            .replace(/^About the job\s*/i, "")
+                            .replace(/\s+/g, " ")
+                            .trim(),
+                    )
+                    .filter((text) => text.length >= 80 && !/^(description|about the job)$/i.test(text));
+                return candidates.sort((left, right) => right.length - left.length)[0] ?? null;
+            })
+            .catch(() => null);
+        if (description) this.log(`Description récupérée : ${description.length} caractère(s)`);
+        return description;
     }
 
     private log(message: string): void {

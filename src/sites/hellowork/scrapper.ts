@@ -12,6 +12,7 @@ export interface HelloworkResult {
         location: string | null;
         contract: string | null;
         publishedAt: string | null;
+        description: string | null;
         visibleInfo: string[];
     };
 }
@@ -63,6 +64,10 @@ export class HelloworkScrapper {
                         .split(/\n+/)
                         .map((value) => value.replace(/\s+/g, " ").trim())
                         .filter((value) => value && value !== title);
+                    const description =
+                        [...(card?.querySelectorAll("[class*='description'], [class*='summary'], [class*='mission'], p") ?? [])]
+                            .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+                            .find((value) => value.length >= 80 && value !== title) ?? null;
 
                     return {
                         href: (link as HTMLAnchorElement).href,
@@ -75,6 +80,7 @@ export class HelloworkScrapper {
                             visibleInfo.find((value) =>
                                 /moins d'une heure|il y a \d+ heure|il y a \d+ jour|hier|aujourd'hui/i.test(value),
                             ) ?? null,
+                        description,
                         visibleInfo,
                     };
                 }),
@@ -91,6 +97,7 @@ export class HelloworkScrapper {
                         location: entry.location,
                         contract: entry.contract,
                         publishedAt: entry.publishedAt,
+                        description: entry.description,
                         visibleInfo: entry.visibleInfo,
                     },
                 });

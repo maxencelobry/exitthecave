@@ -13,6 +13,7 @@ export interface FranceTravailResult {
         contract: string | null;
         workTime: string | null;
         publishedAt: string | null;
+        description: string | null;
     };
 }
 
@@ -113,8 +114,9 @@ export class FranceTravailBrowserScrapper {
                             .trim();
                     })(),
                     contract: element.querySelector(".contrat")?.childNodes[0]?.textContent?.trim() ?? "",
-                    workTime: element.querySelector(".type-contrat")?.textContent?.trim() ?? "",
-                    publishedAt: element.querySelector(".date")?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+                            workTime: element.querySelector(".type-contrat")?.textContent?.trim() ?? "",
+                            publishedAt: element.querySelector(".date")?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+                            description: null,
                 })),
             );
             this.log(`Page ${pageNumber} : ${entries.length} carte(s) détectée(s)`);
@@ -130,6 +132,7 @@ export class FranceTravailBrowserScrapper {
                         contract: entry.contract || null,
                         workTime: entry.workTime || null,
                         publishedAt: entry.publishedAt || null,
+                        description: entry.description,
                     },
                 });
                 newResults += 1;
