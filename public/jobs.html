@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Job Hunter</title>
+        <title>ExitTheCave · offres d'emploi</title>
+        <link rel="stylesheet" href="styles.css" />
         <style>
             :root {
                 color-scheme: dark;
@@ -48,6 +49,22 @@
                 justify-content: space-between;
                 gap: 20px;
                 margin-bottom: 24px;
+            }
+
+            .repo-link {
+                flex: 0 0 auto;
+                color: #dce6ff;
+                text-decoration: none;
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                padding: 9px 13px;
+                transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            }
+
+            .repo-link:hover {
+                color: white;
+                border-color: var(--accent);
+                transform: translateY(-1px);
             }
 
             h1 {
@@ -461,11 +478,14 @@
         <main class="shell">
             <header>
                 <div>
-                    <h1>Job Hunter</h1>
+                    <p class="eyebrow">ESPACE DE RECHERCHE</p>
+                    <h1>ExitTheCave</h1>
+                    <a class="repo-link" href="https://github.com/maxencelobry/exitthecave" target="_blank" rel="noreferrer">GitHub ↗</a>
                     <p class="subtitle">
                         Recherche rapide dans tes offres. Ouvre les annonces, suis ta progression et postule sans perdre
                         de temps.
                     </p>
+                    <p class="freshness-note">Résultats ciblés sur les offres publiées dans les dernières 24 heures.</p>
                 </div>
             </header>
 
@@ -477,7 +497,7 @@
 
             <details class="profile">
                 <summary>Profil CV actif · classement automatique</summary>
-                <p>
+                <p id="profile-summary">
                     Assistant administratif polyvalent · secrétariat · accueil · back-office · gestion de dossiers ·
                     saisie et contrôle de données · procédures · confidentialité · rigueur · autonomie · service client
                     · Word · Excel · Outlook · Google Workspace · Kalilab · laboratoire · juridique · anglais
@@ -525,13 +545,6 @@
                 <label class="file-label" for="file">Importer un CSV</label>
                 <input class="file-input" id="file" type="file" accept=".csv,text/csv" />
                 <button id="load" class="secondary" type="button">Recharger jobs.csv</button>
-                <input
-                    id="api-url"
-                    type="url"
-                    placeholder="URL API CSV : http://127.0.0.1:3000/jobs.csv"
-                    aria-label="URL de l'API CSV"
-                />
-                <button id="load-api" class="secondary" type="button">Charger l’API</button>
                 <button id="clear" class="secondary" type="button">Réinitialiser</button>
                 <details class="columns-menu">
                     <summary>Colonnes affichées</summary>
@@ -655,6 +668,25 @@
                 ["cdi", 4],
                 ["cdd", 3],
             ];
+            const DEFAULT_CONFIG = {
+                profile: {
+                    targetTitles: [],
+                    keywords: [],
+                    skills: [],
+                    languages: [],
+                    experience: [],
+                    education: [],
+                    contracts: [],
+                    workPreferences: [],
+                },
+                search: {
+                    excludedBroadLocations: [],
+                    excludedContracts: [],
+                    ignoredCompanies: [],
+                },
+                interface: { defaultSort: "newest", showDescriptionByDefault: true, showExtraFieldsByDefault: true },
+            };
+            let userConfig = DEFAULT_CONFIG;
             const ROW_HEIGHT = 86;
             const OVERSCAN = 8;
             let offers = [];
@@ -673,8 +705,6 @@
                 fitFilter: document.querySelector("#fit-filter"),
                 sort: document.querySelector("#sort"),
                 load: document.querySelector("#load"),
-                apiUrl: document.querySelector("#api-url"),
-                loadApi: document.querySelector("#load-api"),
                 clear: document.querySelector("#clear"),
                 status: document.querySelector("#status"),
                 visibleCount: document.querySelector("#visible-count"),
@@ -687,7 +717,6 @@
             };
 
             const STORAGE_COLUMNS = "jobs-visible-columns";
-            const STORAGE_API_URL = "jobs-api-url";
 
             function readSet(key) {
                 try {
@@ -725,10 +754,39 @@
             }
 
             function excludedCompanyNames() {
-                return elements.excludedCompanies.value
+                const manual = elements.excludedCompanies.value
                     .split(",")
                     .map((value) => value.trim().toLocaleLowerCase("fr"))
                     .filter(Boolean);
+                const configured = Array.isArray(userConfig.search.ignoredCompanies)
+                    ? userConfig.search.ignoredCompanies.map((value) => String(value).trim().toLocaleLowerCase("fr"))
+                    : [];
+                return [...new Set([...configured, ...manual])];
+            }
+
+            function configuredTerms() {
+                const profile = userConfig.profile || DEFAULT_CONFIG.profile;
+                return [
+                    ...(profile.targetTitles || []).map((value) => [value, 12]),
+                    ...(profile.keywords || []).map((value) => [value, 8]),
+                    ...(profile.skills || []).map((value) => [value, 6]),
+                    ...(profile.languages || []).map((value) => [value, 3]),
+                    ...(profile.experience || []).map((value) => [value, 4]),
+                    ...(profile.education || []).map((value) => [value, 3]),
+                    ...(profile.contracts || []).map((value) => [value, 4]),
+                    ...(profile.workPreferences || []).map((value) => [value, 3]),
+                ].filter(([value]) => String(value).trim());
+            }
+
+            function configuredProfileSummary() {
+                const profile = userConfig.profile || DEFAULT_CONFIG.profile;
+                const values = [
+                    ...(profile.targetTitles || []),
+                    ...(profile.keywords || []),
+                    ...(profile.skills || []),
+                    ...(profile.contracts || []),
+                ].filter(Boolean);
+                return values.length ? `Profil actif · ${values.slice(0, 14).join(" · ")}` : "Profil CV actif";
             }
 
             function cleanContractValue(value) {
@@ -823,9 +881,12 @@
                 const text = String(offer._search || "");
                 let score = 0;
                 let total = 0;
-                PROFILE_KEYWORDS.forEach(([keyword, weight]) => {
-                    total += weight;
-                    if (text.includes(keyword)) score += title.includes(keyword) ? weight * 1.7 : weight;
+                const terms = configuredTerms().length ? configuredTerms() : PROFILE_KEYWORDS;
+                terms.forEach(([keyword, weight]) => {
+                    const normalizedKeyword = String(keyword).toLocaleLowerCase("fr");
+                    const numericWeight = Number(weight);
+                    total += numericWeight;
+                    if (text.includes(normalizedKeyword)) score += title.includes(normalizedKeyword) ? numericWeight * 1.7 : numericWeight;
                 });
                 const contract = String(offer.contrat || "").toLocaleLowerCase("fr");
                 if (/cdi|cdd/.test(contract)) score += 8;
@@ -879,6 +940,12 @@
                         !excludedCompanies.some((name) =>
                             String(offer.entreprise || "").toLocaleLowerCase("fr").includes(name),
                         ) &&
+                        !((userConfig.search.excludedBroadLocations || []).some((location) =>
+                            String(offer.localisation || "").toLocaleLowerCase("fr").includes(String(location).toLocaleLowerCase("fr")),
+                        )) &&
+                        !((userConfig.search.excludedContracts || []).some((contractName) =>
+                            String(offer.contrat || "").toLocaleLowerCase("fr").includes(String(contractName).toLocaleLowerCase("fr")),
+                        )) &&
                         (!site || offer.site === site) &&
                         (!contract || offer.contrat === contract) &&
                         (!fitFilter || offer._fit >= fitFilter) &&
@@ -1034,29 +1101,44 @@
                 elements.contract.value = "";
                 elements.statusFilter.value = "all";
                 elements.fitFilter.value = "all";
-                elements.sort.value = "fit";
+                elements.sort.value = userConfig.interface.defaultSort === "oldest" ? "oldest" : userConfig.interface.defaultSort === "fit" ? "fit" : "newest";
                 applyFilters();
+            }
+
+            async function loadConfig() {
+                try {
+                    const response = await fetch("data/config.json", { cache: "no-store" });
+                    if (!response.ok) throw new Error("Configuration absente");
+                    const loaded = await response.json();
+                    userConfig = {
+                        ...DEFAULT_CONFIG,
+                        ...loaded,
+                        search: {
+                            ...DEFAULT_CONFIG.search,
+                            ...(loaded.search || {}),
+                            ...(loaded.filters || {}),
+                        },
+                    };
+                } catch {
+                    userConfig = DEFAULT_CONFIG;
+                }
+                document.querySelector("#profile-summary").textContent = configuredProfileSummary();
+                elements.sort.value = userConfig.interface.defaultSort === "oldest" ? "oldest" : userConfig.interface.defaultSort === "fit" ? "fit" : "newest";
+                if (userConfig.interface.showDescriptionByDefault === false) {
+                    const description = document.querySelector('[data-column="description"]');
+                    if (description) description.checked = false;
+                }
+                if (userConfig.interface.showExtraFieldsByDefault === false) {
+                    ["remote", "experience", "skills", "freshness", "reliability"].forEach((column) => {
+                        const input = document.querySelector(`[data-column="${column}"]`);
+                        if (input) input.checked = false;
+                    });
+                }
+                updateColumnVisibility(false);
             }
 
             function loadExcludedCompanies() {
                 elements.excludedCompanies.value = localStorage.getItem(STORAGE_EXCLUDED_COMPANIES) || "";
-            }
-
-            function loadApiUrl() {
-                elements.apiUrl.value = localStorage.getItem(STORAGE_API_URL) || "http://127.0.0.1:3000/jobs.csv";
-            }
-
-            async function loadFromApi() {
-                const url = elements.apiUrl.value.trim();
-                if (!url) return;
-                localStorage.setItem(STORAGE_API_URL, url);
-                try {
-                    const response = await fetch(url, { cache: "no-store" });
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    loadText(await response.text());
-                } catch (error) {
-                    elements.status.textContent = `Impossible de charger l’API : ${String(error)}`;
-                }
             }
 
             elements.file.addEventListener("change", async () => {
@@ -1071,7 +1153,6 @@
                         "Impossible de charger data/latest/jobs.csv : importe le fichier manuellement.";
                 }
             });
-            elements.loadApi.addEventListener("click", loadFromApi);
             elements.clear.addEventListener("click", resetFilters);
             elements.excludedCompanies.addEventListener("input", () => {
                 localStorage.setItem(STORAGE_EXCLUDED_COMPANIES, elements.excludedCompanies.value);
@@ -1089,8 +1170,7 @@
             elements.scroll.addEventListener("scroll", renderWindow, { passive: true });
             loadColumnVisibility();
             loadExcludedCompanies();
-            loadApiUrl();
-            elements.load.click();
+            loadConfig().then(() => elements.load.click());
         </script>
     </body>
 </html>

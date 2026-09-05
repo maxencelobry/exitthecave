@@ -1,5 +1,5 @@
 {
-    "name": "trouveunemploi",
+    "name": "exitthecave",
     "version": "1.0.0",
     "description": "",
     "dependencies": {
@@ -14,6 +14,7 @@
     "scripts": {
         "build": "tsc",
         "start": "node dist/main.js",
+        "view": "node dist/view.js",
         "test": "tsc && node dist/main.js"
     },
     "keywords": [],

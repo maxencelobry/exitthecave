@@ -18,6 +18,7 @@ logs/
 
 # Scraper output and local browser state
 data/*
+!data/config.example.json
 !data/examples/
 !data/examples/*.json
 !data/examples/*.csv

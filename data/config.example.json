@@ -1,0 +1,75 @@
+{
+    "_comment": "Copy this file to data/config.json, then replace the values with the JSON returned by PROMPT.md. The 24-hour publication window is automatic.",
+    "history": {
+        "enabled": true,
+        "directoryName": "history"
+    },
+    "scrapers": {
+        "enabled": {
+            "franceTravail": true,
+            "meteojob": true,
+            "hellowork": true,
+            "glassdoor": false,
+            "cadremploi": true,
+            "apec": true,
+            "jobijoba": false,
+            "linkedin": false
+        }
+    },
+    "location": {
+        "city": "Your city",
+        "postalCode": null,
+        "departmentCode": null,
+        "inseeCode": null,
+        "radiusKm": 10
+    },
+    "filters": {
+        "excludedBroadLocations": [],
+        "excludedContracts": ["Alternance", "Stage"],
+        "ignoredCompanies": []
+    },
+    "franceTravail": {
+        "_comment": "Optional France Travail API. Create API credentials in your France Travail developer account, save the JSON file locally, and put its absolute path in credentialsFile. Never commit that file or share its contents.",
+        "locationCode": null,
+        "radiusKm": 10,
+        "credentialsFile": null,
+        "api": {
+            "_comment": "Set enabled to true only after credentialsFile points to a valid local credentials JSON file.",
+            "enabled": false
+        }
+    },
+    "apec": {
+        "locationId": null
+    },
+    "glassdoor": {
+        "locationPath": "",
+        "radiusMiles": 6
+    },
+    "cadremploi": {
+        "locationSlug": ""
+    },
+    "jobijoba": {
+        "radiusKm": 10
+    },
+    "linkedin": {
+        "searchUrl": "https://www.linkedin.com/jobs/search-results/?keywords=publi%C3%A9%20au%20cours%20des%20derni%C3%A8res%2024%20heures&origin=SEMANTIC_SEARCH_LANDING_PAGE",
+        "maxPages": 50,
+        "loadDescriptions": false
+    },
+    "profile": {
+        "targetTitles": [],
+        "keywords": [],
+        "skills": [],
+        "languages": [],
+        "experience": [],
+        "education": [],
+        "contracts": [],
+        "workPreferences": []
+    },
+    "interface": {
+        "language": "fr",
+        "defaultSort": "newest",
+        "showDescriptionByDefault": false,
+        "showExtraFieldsByDefault": true
+    }
+}
