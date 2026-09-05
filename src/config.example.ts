@@ -8,7 +8,7 @@ export const searchConfigExample = {
     history: {
         // Skip offers already found in an earlier run when enabled.
         enabled: true,
-        directoryName: "results",
+        directoryName: "history",
     },
 
     scrapers: {

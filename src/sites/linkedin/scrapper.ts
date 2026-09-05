@@ -37,7 +37,7 @@ export class LinkedinScrapper {
         const results = new Map<string, LinkedinResult>();
         let browser: Awaited<ReturnType<typeof connect>>["browser"] | undefined;
         try {
-            const profilePath = join(process.cwd(), "data", "browser-state", "linkedin-profile");
+            const profilePath = join(process.cwd(), "data", "browser-state", "linkedin");
             await mkdir(profilePath, { recursive: true });
             const connection = await connect({
                 headless: false,

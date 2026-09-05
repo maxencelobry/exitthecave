@@ -1065,10 +1065,10 @@
             });
             elements.load.addEventListener("click", async () => {
                 try {
-                    loadText(await (await fetch("data/jobs.csv", { cache: "no-store" })).text());
+                    loadText(await (await fetch("data/latest/jobs.csv", { cache: "no-store" })).text());
                 } catch {
                     elements.status.textContent =
-                        "Impossible de charger data/jobs.csv : importe le fichier manuellement.";
+                        "Impossible de charger data/latest/jobs.csv : importe le fichier manuellement.";
                 }
             });
             elements.loadApi.addEventListener("click", loadFromApi);

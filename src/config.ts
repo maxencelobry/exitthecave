@@ -3,7 +3,7 @@ type FranceTravailRadiusKm = 5 | 10 | 20 | 30 | 40 | 50 | 100;
 export const searchConfig = {
     history: {
         enabled: true,
-        directoryName: "results",
+        directoryName: "history",
     },
     scrapers: {
         enabled: {

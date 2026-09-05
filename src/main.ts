@@ -45,8 +45,9 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
         offers.map((offer) => ({ site, title: offer.title, url: offer.url, extra: offer.extra })),
     );
     const dataPath = join(process.cwd(), "data");
-    const outputPath = join(dataPath, "jobs.json");
-    const csvOutputPath = join(dataPath, "jobs.csv");
+    const latestDirectory = join(dataPath, "latest");
+    const outputPath = join(latestDirectory, "jobs.json");
+    const csvOutputPath = join(latestDirectory, "jobs.csv");
     const resultsDirectory = join(dataPath, searchConfig.history.directoryName);
     const historyPath = join(dataPath, "results.json");
     const seenUrls = searchConfig.history.enabled
@@ -67,7 +68,7 @@ export async function collectOffers(options: FranceTravailApiOptions = {}): Prom
         })),
     );
 
-    await mkdir(dataPath, { recursive: true });
+    await mkdir(latestDirectory, { recursive: true });
     const freshStats = Object.fromEntries(
         Object.entries(freshResults).map(([site, offers]) => [site, { offers: offers.length }]),
     );
