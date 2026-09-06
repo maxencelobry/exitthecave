@@ -42,6 +42,9 @@ const elements = {
     feedback: $("#feedback"),
     feedbackIcon: $("#feedback-icon"),
     feedbackText: $("#feedback-text"),
+    nav: [...document.querySelectorAll("[data-view]")],
+    profilePanel: document.querySelector(".profile"),
+    settingsPanel: document.querySelector(".settings"),
 };
 
 function readSet(key) {
@@ -235,26 +238,28 @@ function fillOptions(select, values) {
     });
 }
 
-function createCell(value, className = "") {
-    const cell = document.createElement("td");
-    cell.className = className;
-    if (value instanceof Node) cell.append(value);
-    else cell.textContent = text(value) || "—";
-    return cell;
-}
-
 function createRow(offer) {
-    const row = document.createElement("tr");
+    const row = document.createElement("article");
     const isVisited = visited.has(offer._key);
     const isApplied = sent.has(offer._key);
-    row.className = `${isVisited ? "visited " : ""}${isApplied ? "applied" : ""}`.trim();
+    row.className = `offer-card ${isVisited ? "visited " : ""}${isApplied ? "applied" : ""}`.trim();
 
     const score = document.createElement("span");
     score.className = `score ${offer._fit >= 80 ? "high" : offer._fit >= 60 ? "medium" : ""}`;
     score.textContent = `${offer._fit}%`;
+    const scoreLabel = document.createElement("span");
+    scoreLabel.className = "score-label";
+    scoreLabel.textContent = "correspondance";
+    const scoreBox = document.createElement("div");
+    scoreBox.className = "score-stack";
+    scoreBox.append(score, scoreLabel);
 
     const titleBox = document.createElement("div");
-    titleBox.className = "title-box";
+    titleBox.className = "offer-card-main";
+
+    const meta = document.createElement("div");
+    meta.className = "offer-eyebrow";
+    meta.textContent = [offer.site, displayDate(offer.date_publication)].filter(Boolean).join(" · ") || "Offre collectée";
     const link = document.createElement("a");
     link.href = offer.lien || "#";
     link.target = "_blank";
@@ -266,6 +271,10 @@ function createRow(offer) {
         applyFilters(false);
         showFeedback(`Offre ouverte : ${offer.intitulé || "sans intitulé"}`);
     });
+    const companyLine = document.createElement("div");
+    companyLine.className = "offer-meta";
+    companyLine.textContent = [offer.entreprise, offer.localisation, offer.contrat].filter(Boolean).join("  ·  ") || "Informations à vérifier dans l'annonce";
+
     const tags = document.createElement("div");
     tags.className = "row-tags";
     [offer.site, offer.salaire, offer.temps_de_travail].filter(Boolean).forEach((value) => {
@@ -279,7 +288,7 @@ function createRow(offer) {
         opened.textContent = "✓ ouverte";
         tags.prepend(opened);
     }
-    titleBox.append(link, tags);
+    titleBox.append(meta, link, companyLine, tags);
     const details = document.createElement("details");
     details.className = "offer-details";
     details.open = expandedOffers.has(offer._key) || elements.details.value === "all";
@@ -317,15 +326,13 @@ function createRow(offer) {
         showFeedback(`${message} · suivi enregistré.`);
     });
 
-    row.append(
-        createCell(score, "score-cell"),
-        createCell(titleBox, "offer-cell"),
-        createCell(offer.entreprise),
-        createCell(offer.localisation),
-        createCell(offer.contrat),
-        createCell(displayDate(offer.date_publication)),
-        createCell(tracking, "tracking-cell"),
-    );
+    const actions = document.createElement("div");
+    actions.className = "offer-card-actions";
+    const actionLabel = document.createElement("span");
+    actionLabel.className = "action-label";
+    actionLabel.textContent = "Mon suivi";
+    actions.append(actionLabel, tracking);
+    row.append(scoreBox, titleBox, actions);
     return row;
 }
 
@@ -334,17 +341,16 @@ function render() {
     filtered.forEach((offer) => fragment.append(createRow(offer)));
     elements.results.replaceChildren(fragment);
     if (!filtered.length) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 7;
-        cell.className = "empty";
-        cell.textContent = offers.length ? "Aucune offre avec ces filtres." : "Aucune offre locale. Lance la collecte puis actualise.";
-        row.append(cell);
-        elements.results.append(row);
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = offers.length ? "Aucune offre avec ces filtres." : "Aucune offre locale. Lance la collecte puis actualise.";
+        elements.results.append(empty);
     }
     elements.visible.textContent = filtered.length.toLocaleString("fr-FR");
     elements.total.textContent = offers.length.toLocaleString("fr-FR");
     elements.visited.textContent = offers.filter((offer) => visited.has(offer._key)).length.toLocaleString("fr-FR");
+    const resultLabel = $("#result-count-label");
+    if (resultLabel) resultLabel.textContent = `${filtered.length.toLocaleString("fr-FR")} offre${filtered.length > 1 ? "s" : ""}`;
     elements.statusText.textContent = `${filtered.length.toLocaleString("fr-FR")} offre${filtered.length > 1 ? "s" : ""} affichée${filtered.length > 1 ? "s" : ""} sur ${offers.length.toLocaleString("fr-FR")}.`;
 }
 
@@ -374,7 +380,32 @@ function applyFilters(scrollToTop = true) {
         return elements.sort.value === "newest" ? difference : -difference;
     });
     render();
-    if (scrollToTop) $(".table-scroll").scrollTop = 0;
+    if (scrollToTop) $(".offer-list").scrollTop = 0;
+}
+
+function switchView(view) {
+    elements.nav.forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+    if (view === "review" || view === "sent") {
+        elements.status.value = view;
+        applyFilters();
+        return;
+    }
+    if (view === "offers") {
+        elements.status.value = "all";
+        applyFilters();
+        return;
+    }
+    if (view === "profile") {
+        elements.profilePanel.open = true;
+        elements.profilePanel.scrollIntoView({ behavior: "smooth", block: "center" });
+        showFeedback("Ton profil actif est affiché.", "info");
+        return;
+    }
+    if (view === "settings") {
+        elements.settingsPanel.open = true;
+        elements.settingsPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+        showFeedback("Réglages affichés.", "info");
+    }
 }
 
 function loadText(value) {
@@ -457,6 +488,7 @@ elements.ignored.addEventListener("input", () => {
         showFeedback(`${element.getAttribute("aria-label") || "Affichage"} : ${element.selectedOptions[0]?.textContent || ""}`, "info");
     }),
 );
+elements.nav.forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
 let searchFrame;
 elements.search.addEventListener("input", () => {
     cancelAnimationFrame(searchFrame);

@@ -14,12 +14,25 @@
                     <span class="brand-mark" aria-hidden="true"><i></i></span>
                     <span>ExitTheCave</span>
                 </a>
+                <nav class="main-nav" aria-label="Navigation principale">
+                    <button class="nav-link active" type="button" data-view="offers">Offres</button>
+                    <button class="nav-link" type="button" data-view="review">À revoir</button>
+                    <button class="nav-link" type="button" data-view="sent">Candidatures</button>
+                </nav>
                 <div class="top-context">
                     <span class="live-dot"></span>
                     <span id="config-state">Configuration locale</span>
                     <a href="https://github.com/maxencelobry/exitthecave" target="_blank" rel="noreferrer">GitHub ↗</a>
                 </div>
             </header>
+
+            <section class="page-heading" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">TA RECHERCHE</p>
+                    <h1 id="page-title">Les offres pour toi</h1>
+                    <p>Trie, ouvre et garde les offres qui t’intéressent.</p>
+                </div>
+            </section>
 
             <section class="dashboard" aria-label="Statistiques">
                 <div><span>Affichées</span><strong id="visible-count">0</strong></div>
@@ -99,23 +112,12 @@
                 <span id="collection-date">Date de collecte non disponible</span>
             </div>
 
-            <section class="table-card" aria-label="Offres">
-                <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Score</th>
-                                <th>Offre</th>
-                                <th>Entreprise</th>
-                                <th>Lieu</th>
-                                <th>Contrat</th>
-                                <th>Date</th>
-                                <th>Suivi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results"></tbody>
-                    </table>
+            <section class="offers-panel" aria-label="Offres">
+                <div class="offers-panel-head">
+                    <div><strong>Les offres à regarder</strong><span id="result-count-label">—</span></div>
+                    <span class="panel-hint">Triées pour toi</span>
                 </div>
+                <div id="results" class="offer-list"></div>
             </section>
 
             <footer><span>ExitTheCave · local</span><span>Offres des dernières 24 heures</span></footer>
